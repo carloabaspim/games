@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M5 Group Challenge — Unit 2: Speed Limits</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0a0a2e;
+    color: #fff;
+    min-height: 100vh;
+    padding: 1.5rem 1rem;
+    font-size: 30px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: clamp(36px, 5vw, 60px);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    color: #ffd700;
+    text-shadow: 0 0 20px rgba(255,215,0,0.4);
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 24px;
+    color: #aab;
+    margin-bottom: 1.5rem;
+  }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ── SETUP ── */
+  .setup-card {
+    max-width: 560px;
+    margin: 0 auto;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,215,0,0.25);
+    border-radius: 16px;
+    padding: 1.75rem;
+  }
+  .setup-card h2 { font-size: 32px; font-weight: 600; color: #ffd700; margin-bottom: 1.25rem; }
+  .num-row { display: flex; align-items: center; gap: 14px; margin-bottom: 1.25rem; }
+  .num-row label { font-size: 28px; color: #ccd; }
+  .num-btn {
+    width: 50px; height: 50px; border-radius: 50%;
+    background: rgba(255,215,0,0.15); border: 1px solid rgba(255,215,0,0.4);
+    color: #ffd700; font-size: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+  .num-btn:hover { background: rgba(255,215,0,0.3); }
+  .num-val { font-size: 32px; font-weight: 700; color: #fff; min-width: 28px; text-align: center; }
+  .team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
+  .team-wrap label { display: block; font-size: 24px; color: #aab; margin-bottom: 4px; }
+  .team-wrap input {
+    width: 100%; padding: 14px 16px; border-radius: 8px;
+    border: 1px solid rgba(255,215,0,0.3); background: rgba(255,255,255,0.07);
+    color: #fff; font-size: 18px;
+  }
+  .team-wrap input:focus { outline: none; border-color: #ffd700; }
+  .start-btn {
+    width: 100%; padding: 18px; border-radius: 10px; border: none;
+    background: linear-gradient(135deg, #ffd700, #ffaa00);
+    color: #0a0a2e; font-size: 28px; font-weight: 700; cursor: pointer;
+    letter-spacing: 0.3px;
+  }
+  .start-btn:hover { filter: brightness(1.1); }
+
+  /* ── GAME ── */
+  .game-layout {
+    display: grid;
+    grid-template-columns: 1fr 210px;
+    gap: 14px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  @media (max-width: 640px) { .game-layout { grid-template-columns: 1fr; } }
+
+  .main-col { display: flex; flex-direction: column; gap: 12px; }
+
+  /* hot seat bar */
+  .hot-seat-bar {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,215,0,0.2);
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+  }
+  .hs-label {
+    font-size: 24px;
+    color: #aab;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+  .team-pills { display: flex; flex-wrap: wrap; gap: 7px; }
+  .t-pill {
+    padding: 12px 20px;
+    border-radius: 20px;
+    font-size: 24px;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.07);
+    color: #ccd;
+}
+  .t-pill.active { background: rgba(255,215,0,0.2); border-color: #ffd700; color: #ffd700; font-weight: 600; }
+
+  /* question card */
+  .q-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,215,0,0.2);
+    border-radius: 14px;
+    padding: 1.25rem;
+  }
+  .q-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .q-num { font-size: 24px; color: #aab; }
+  .q-topic-badge {
+    font-size: 22px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: rgba(100,200,100,0.15);
+    border: 1px solid rgba(100,200,100,0.4);
+    color: #9deba0;
+}
+  .q-pts-badge {
+    margin-left: auto; font-size: 24px; padding: 2px 10px; border-radius: 20px;
+    background: rgba(255,215,0,0.12); border: 1px solid rgba(255,215,0,0.35); color: #ffd700; font-weight: 600;
+  }
+  .q-text { font-size: clamp(24px, 3vw, 32px); font-weight: 500; line-height: 1.55; margin-bottom: 1rem; color: #f0f0ff; }
+
+  .opts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+  @media (max-width: 480px) { .opts-grid { grid-template-columns: 1fr; } }
+
+  .opt-btn {
+    padding: 10px 12px; border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.07);
+    color: #e8e8ff; font-size: 22px; cursor: pointer; text-align: left;
+    display: flex; gap: 8px; align-items: flex-start; line-height: 1.4;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .opt-btn:hover:not(:disabled) { background: rgba(255,215,0,0.12); border-color: rgba(255,215,0,0.5); }
+  .opt-letter { font-weight: 700; color: #ffd700; min-width: 16px; flex-shrink: 0; }
+  .opt-btn.correct { background: rgba(80,200,80,0.2); border-color: #5cb85c; color: #9deba0; }
+  .opt-btn.wrong { background: rgba(220,50,50,0.2); border-color: #c0392b; color: #f1948a; }
+  .opt-btn.eliminated { opacity: 0.2; pointer-events: none; }
+  .opt-btn:disabled { cursor: default; }
+
+  /* lifelines */
+  .lifelines-row { display: flex; gap: 9px; flex-wrap: wrap; }
+  .ll-btn {
+    flex: 1; min-width: 85px; padding: 9px 10px; border-radius: 10px;
+    border: 1px solid rgba(255,215,0,0.3); background: rgba(255,215,0,0.08);
+    color: #ffd700; font-size: 20px; font-weight: 600; cursor: pointer; text-align: center;
+  }
+  .ll-btn:hover:not(:disabled) { background: rgba(255,215,0,0.2); }
+  .ll-btn.used, .ll-btn:disabled { opacity: 0.3; cursor: default; text-decoration: line-through; }
+
+  .info-msg {
+    margin-top: 10px; padding: 10px 12px; border-radius: 10px;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+    font-size: 24px; color: #ccd; line-height: 1.5;
+  }
+
+  /* result box */
+  .result-box {
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,215,0,0.25);
+    border-radius: 14px; padding: 1.25rem; text-align: center;
+  }
+  .result-icon { font-size: 36px; margin-bottom: 6px; }
+  .result-title { font-size: 32px; font-weight: 700; margin-bottom: 4px; color: #ffd700; }
+  .result-sub { font-size: 24px; color: #aab; margin-bottom: 14px; line-height: 1.5; }
+  .res-btn {
+    padding: 16px 28px; border-radius: 10px; border: none;
+    background: linear-gradient(135deg, #ffd700, #ffaa00);
+    color: #0a0a2e; font-size: 24px; font-weight: 700; cursor: pointer; margin: 4px;
+  }
+  .res-btn:hover { filter: brightness(1.1); }
+  .res-btn.sec {
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #ccd;
+  }
+
+  /* sidebar */
+  .side-col { display: flex; flex-direction: column; gap: 12px; }
+  .side-card {
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,215,0,0.18);
+    border-radius: 12px; padding: 0.85rem 1rem;
+  }
+  .side-title { font-size: 24px; color: #aab; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .score-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.07);
+    font-size: 20px; color: #ccd;
+  }
+  .score-row:last-child { border-bottom: none; }
+  .score-row.cur { color: #ffd700; font-weight: 600; }
+  .score-pts { font-weight: 600; }
+  .lad-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 10px;
+    border-radius: 5px;
+    font-size: 22px;
+    color: #778;
+}
+  .lad-row.cur { background: rgba(255,215,0,0.15); color: #ffd700; font-weight: 600; }
+  .lad-row.done { color: #5cb85c; }
+
+  /* final */
+  .final-card {
+    max-width: 500px; margin: 0 auto;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,215,0,0.3);
+    border-radius: 16px; padding: 2rem; text-align: center;
+  }
+  .final-card h2 { font-size: 36px; font-weight: 700; color: #ffd700; margin-bottom: 4px; }
+  .final-card p { font-size: 24px; color: #aab; margin-bottom: 1.25rem; }
+  .podium-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 16px; border-radius: 10px; margin-bottom: 8px; font-size: 24px;
+  }
+  .podium-row.p1 { background: rgba(255,215,0,0.2); border: 1px solid rgba(255,215,0,0.4); color: #ffd700; font-weight: 700; }
+  .podium-row.p2 { background: rgba(200,200,220,0.1); border: 1px solid rgba(255,255,255,0.15); color: #ccd; }
+  .podium-row.p3 { background: rgba(180,120,60,0.12); border: 1px solid rgba(180,120,60,0.3); color: #c9956a; }
+  .podium-row.px { background: rgba(255,255,255,0.05); color: #778; font-size: 24px; }
+  .restart-btn {
+    margin-top: 1.25rem; padding: 16px 28px; border-radius: 10px; border: none;
+    background: linear-gradient(135deg, #ffd700, #ffaa00);
+    color: #0a0a2e; font-size: 24px; font-weight: 700; cursor: pointer;
+  }
+  .restart-btn:hover { filter: brightness(1.1); }
+
+  .timer-box{
+  text-align:center;
+  margin-bottom:15px;
+  padding:10px;
+  border-radius:10px;
+  background:rgba(255,215,0,0.12);
+  border:1px solid rgba(255,215,0,0.35);
+  color:#ffd700;
+  font-weight:700;
+  font-size:30px;
+}
+
+.timer-warning{
+  color:#ff6666;
+  border-color:#ff6666;
+}
+</style>
+</head>
+<body>
+
+<h1>M5 Group Challenge</h1>
+<p class="subtitle">Unit 2 — Speed Limits</p>
+
+<div id="screen-setup" class="screen active">
+  <div class="setup-card">
+    <h2>Set up your teams</h2>
+    <div class="num-row">
+      <label>Number of teams:</label>
+      <button class="num-btn" onclick="changeTeams(-1)">−</button>
+      <span class="num-val" id="num-val">4</span>
+      <button class="num-btn" onclick="changeTeams(1)">+</button>
+    </div>
+    <div id="team-inputs" class="team-grid"></div>
+    <button class="start-btn" onclick="startGame()">Start game</button>
+  </div>
+</div>
+
+<div id="screen-game" class="screen">
+  <div class="game-layout">
+    <div class="main-col">
+      <div class="hot-seat-bar">
+        <div class="hs-label">Team in the hot seat</div>
+        <div class="team-pills" id="team-pills"></div>
+      </div>
+      <div class="q-card">
+        <div class="q-meta">
+          <span class="q-num" id="q-num"></span>
+          <span class="q-topic-badge" id="q-topic"></span>
+          <span class="q-pts-badge" id="q-pts"></span>
+        </div>
+        <div class="q-text" id="q-text"></div>
+        <div id="timer-box" class="timer-box">
+  ⏰ Time Remaining: <span id="timer">20</span>s
+</div>
+        <div class="opts-grid" id="opts-grid"></div>
+        <div id="vote-area"></div>
+        <div id="info-area"></div>
+      </div>
+      <div class="lifelines-row">
+        <button class="ll-btn" id="ll-5050" onclick="use5050()">50 / 50</button>
+        <button class="ll-btn" id="ll-ask" onclick="useAskClass()">Ask the class</button>
+        <button class="ll-btn" id="ll-friend" onclick="usePhoneFriend()">Phone the teacher</button>
+      </div>
+      <div id="result-area"></div>
+    </div>
+    <div class="side-col">
+      <div class="side-card">
+        <div class="side-title">Scoreboard</div>
+        <div id="scoreboard"></div>
+      </div>
+      <div class="side-card">
+        <div class="side-title">Prize ladder</div>
+        <div id="ladder"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="screen-final" class="screen">
+  <div class="final-card">
+    <div style="font-size:44px;margin-bottom:8px;">🏆</div>
+    <h2>Game over!</h2>
+    <p>Final scores</p>
+    <div id="final-podium"></div>
+    <button class="restart-btn" onclick="restartGame()">Play again</button>
+  </div>
+</div>
+
+<script>
+const ALL_QUESTIONS = [
+
+/* LEVEL 1 */
+
+{
+level:1,
+topic:"Vocabulary",
+points:100,
+text:"Which compound noun is connected to driving legally?",
+options:["Driving licence","Traffic jam","Roadside","Road movie"],
+answer:0
+},
+
+{
+level:1,
+topic:"Vocabulary",
+points:200,
+text:"Tom's fuel gauge is almost empty during a long journey. Where should he stop?",
+options:[
+"Road sign",
+"Traffic jam",
+"Roundabout",
+"Service station"
+],
+answer:3
+},
+
+{
+level:1,
+topic:"Road Safety",
+points:100,
+text:"What should drivers do at a red traffic light?",
+options:["Speed up","Stop","Turn around","Use the horn"],
+answer:1
+},
+
+{
+level:1,
+topic:"Road Safety",
+points:100,
+text:"What is the safest thing to wear in a car?",
+options:["Watch","Hat","Seatbelt","Sunglasses"],
+answer:2
+},
+
+{
+level:1,
+topic:"Vocabulary",
+points:100,
+text:"What is a motorist?",
+options:["A passenger","A cyclist","A driver","A mechanic"],
+answer:2
+},
+
+/* LEVEL 2 */
+
+{
+level:2,
+topic:"Compound Nouns",
+points:200,
+text:"What is road rage?",
+options:[
+"A traffic accident",
+"Angry behaviour while driving",
+"A road repair",
+"A driving lesson"
+],
+answer:1
+},
+
+{
+level:2,
+topic:"Vocabulary",
+points:200,
+text:"What is a carpool?",
+options:[
+"A shared journey",
+"A type of road",
+"A fuel station",
+"A parking space"
+],
+answer:0
+},
+
+{
+level:2,
+topic:"Environment",
+points:200,
+text:"Which vehicle produces the least pollution?",
+options:[
+"A bicycle",
+"A motorbike",
+"A car",
+"A truck"
+],
+answer:0
+},
+
+{
+level:2,
+topic:"Listening",
+points:200,
+text:"Which invention came before modern cars?",
+options:[
+"Motorways",
+"Traffic lights",
+"Horse-drawn carriages",
+"Driving licences"
+],
+answer:2
+},
+
+{
+level:2,
+topic:"Critical Thinking",
+points:200,
+text:"Which action helps reduce traffic congestion?",
+options:[
+"Using two cars",
+"Driving alone",
+"Speeding",
+"Carpooling"
+],
+answer:3
+},
+
+/* LEVEL 3 */
+
+{
+level:3,
+topic:"Modal Verbs",
+points:500,
+text:"Which phrase expresses obligation?",
+options:[
+"could",
+"might",
+"have to",
+"may"
+],
+answer:2
+},
+
+{
+level:3,
+topic:"Modal Verbs",
+points:500,
+text:"Which phrase expresses advice?",
+options:[
+"ought to",
+"mustn't",
+"can't",
+"may"
+],
+answer:0
+},
+
+{
+level:3,
+topic:"Environment",
+points:500,
+text:"What is recycling designed to do?",
+options:[
+"Sell cars",
+"Increase traffic",
+"Build roads",
+"Reduce waste"
+],
+answer:3
+},
+
+{
+level:3,
+topic:"Road Safety",
+points:500,
+text:"Which driver is most likely to cause an accident?",
+options:[
+"A distracted driver",
+"A careful driver",
+"An experienced driver",
+"A patient driver"
+],
+answer:0
+},
+
+{
+level:3,
+topic:"Opinion",
+points:500,
+text:"Which phrase is commonly used to express an opinion?",
+options:[
+"As a result",
+"By the way",
+"In my opinion",
+"For example"
+],
+answer:2
+},
+
+/* LEVEL 4 */
+
+{
+level:4,
+topic:"Young Drivers",
+points:1000,
+text:"Why do some people support raising the driving age?",
+options:[
+"To sell more cars",
+"To improve road safety",
+"To reduce petrol prices",
+"To shorten journeys"
+],
+answer:1
+},
+
+{
+level:4,
+topic:"Young Drivers",
+points:1000,
+text:"What is one argument against raising the driving age?",
+options:[
+"Young people need independence",
+"Cars become slower",
+"Roads become longer",
+"Fuel becomes expensive"
+],
+answer:0
+},
+
+{
+level:4,
+topic:"Modal Verbs",
+points:1000,
+text:"Which sentence shows prohibition?",
+options:[
+"You should not text while driving.",
+"You may text while driving.",
+"You might text while driving.",
+"You mustn't text while driving."
+],
+answer:3
+},
+
+{
+level:4,
+topic:"Writing",
+points:1000,
+text:"Which phrase introduces a contrasting opinion?",
+options:[
+"However",
+"For example",
+"In conclusion",
+"Firstly"
+],
+answer:0
+},
+
+{
+level:4,
+topic:"Environment",
+points:1000,
+text:"What is one advantage of car-free city centres?",
+options:[
+"Less pollution",
+"More traffic jams",
+"More accidents",
+"Longer queues"
+],
+answer:0
+},
+
+/* LEVEL 5 */
+
+{
+level:5,
+topic:"Collocations",
+points:2000,
+text:"Which collocation is correct?",
+options:[
+"Take a risk",
+"Do a risk",
+"Make a risk",
+"Have a risk"
+],
+answer:0
+},
+
+{
+level:5,
+topic:"Collocations",
+points:2000,
+text:"Which collocation is correct?",
+options:[
+"Make an effort",
+"Do an effort",
+"Take an effort",
+"Put an effort"
+],
+answer:0
+},
+
+{
+level:5,
+topic:"Environment",
+points:2000,
+text:"Which action would most reduce household waste?",
+options:[
+"Recycling materials",
+"Buying extra packaging",
+"Throwing everything away",
+"Using more plastic"
+],
+answer:0
+},
+
+{
+level:5,
+topic:"Writing",
+points:2000,
+text:"Which phrase is strongest for expressing an opinion?",
+options:[
+"I am certain that...",
+"I think maybe...",
+"Perhaps...",
+"It could be..."
+],
+answer:0
+},
+
+{
+level:5,
+topic:"Road Safety",
+points:2000,
+text:"A driver is texting while driving. What is the biggest danger?",
+options:[
+"Loss of concentration",
+"Using too much fuel",
+"Driving too quietly",
+"Getting lost"
+],
+answer:0
+},
+
+/* LEVEL 6 */
+
+{
+level:6,
+topic:"Speculation",
+points:5000,
+text:"'The driver isn't answering his phone. He _____ be driving.'",
+options:[
+"must",
+"might",
+"can't",
+"should"
+],
+answer:0
+},
+
+{
+level:6,
+topic:"Speculation",
+points:5000,
+text:"'There are no cars on the road. It _____ be rush hour.'",
+options:[
+"can't",
+"must",
+"might",
+"ought to"
+],
+answer:0
+},
+
+{
+level:6,
+topic:"Environment",
+points:5000,
+text:"Which change would most likely reduce air pollution in cities?",
+options:[
+"Using public transport",
+"Building larger car parks",
+"Driving more often",
+"Buying bigger cars"
+],
+answer:0
+},
+
+{
+level:6,
+topic:"Young Drivers",
+points:5000,
+text:"Which factor helps new drivers become safer?",
+options:[
+"More driving experience",
+"Driving faster",
+"A louder engine",
+"A bigger car"
+],
+answer:0
+},
+
+{
+level:6,
+topic:"Writing",
+points:5000,
+text:"Which phrase is most suitable for concluding an essay?",
+options:[
+"In conclusion",
+"By the way",
+"For instance",
+"Meanwhile"
+],
+answer:0
+},
+
+/* LEVEL 7 */
+
+{
+level:7,
+topic:"Critical Thinking",
+points:10000,
+text:"Which measure would probably save the most lives on the road?",
+options:[
+"Reducing distracted driving",
+"Building more petrol stations",
+"Selling more cars",
+"Widening pavements"
+],
+answer:0
+},
+
+{
+level:7,
+topic:"Speculation",
+points:10000,
+text:"A car is parked outside, but nobody is home. What can you conclude?",
+options:[
+"They might be out",
+"They must be sleeping",
+"They can't own the car",
+"They should drive"
+],
+answer:0
+},
+
+{
+level:7,
+topic:"Environment",
+points:10000,
+text:"Why do some cities encourage cycling?",
+options:[
+"To reduce pollution",
+"To increase traffic",
+"To sell bicycles",
+"To reduce exercise"
+],
+answer:0
+},
+
+{
+level:7,
+topic:"Essay Writing",
+points:10000,
+text:"Which statement is the strongest opinion?",
+options:[
+"There is no question that...",
+"I think perhaps...",
+"It may be that...",
+"It could be argued..."
+],
+answer:0
+},
+
+{
+level:7,
+topic:"Road Safety",
+points:10000,
+text:"Which driver presents the greatest risk?",
+options:[
+"A tired driver",
+"A careful driver",
+"An experienced driver",
+"A patient driver"
+],
+answer:0
+},
+
+/* LEVEL 8 */
+
+{
+level:8,
+topic:"Young Drivers",
+points:50000,
+text:"Why is the debate about raising the driving age controversial?",
+options:[
+"There are strong arguments on both sides",
+"The law already changed everywhere",
+"Young people refuse to drive",
+"Cars are becoming illegal"
+],
+answer:0
+},
+
+{
+level:8,
+topic:"Environment",
+points:50000,
+text:"Which proposal would most reduce a city's carbon emissions?",
+options:[
+"Expanding public transport",
+"Building more car parks",
+"Removing cycle lanes",
+"Lowering parking fees"
+],
+answer:0
+},
+
+{
+level:8,
+topic:"Speculation",
+points:50000,
+text:"The road is completely flooded. Drivers _____ use it safely.",
+options:[
+"can't",
+"must",
+"might",
+"ought to"
+],
+answer:0
+},
+
+{
+level:8,
+topic:"Waste",
+points:50000,
+text:"Which item is most suitable for recycling?",
+options:[
+"An empty glass bottle",
+"A used tissue",
+"Food waste on the floor",
+"A broken shoe"
+],
+answer:0
+},
+
+{
+level:8,
+topic:"Critical Thinking",
+points:50000,
+text:"Which strategy would best reduce traffic congestion?",
+options:[
+"Encouraging carpooling",
+"Increasing speed limits",
+"Adding more traffic lights",
+"Reducing bus services"
+],
+answer:0
+},
+
+/* LEVEL 9 */
+
+{
+level:9,
+topic:"Speculation",
+points:100000,
+text:"The driver left home two minutes ago and lives 50 km away. He _____ be here already.",
+options:[
+"can't",
+"must",
+"might",
+"should"
+],
+answer:0
+},
+
+{
+level:9,
+topic:"Essay Writing",
+points:100000,
+text:"Which sentence best introduces a counterargument?",
+options:[
+"However, some people believe...",
+"In conclusion...",
+"For example...",
+"Firstly..."
+],
+answer:0
+},
+
+{
+level:9,
+topic:"Environment",
+points:100000,
+text:"What is the strongest argument for banning cars from city centres?",
+options:[
+"Improved air quality",
+"Cheaper fuel",
+"More parking spaces",
+"Faster racing"
+],
+answer:0
+},
+
+{
+level:9,
+topic:"Critical Thinking",
+points:100000,
+text:"Which policy would most likely reduce road deaths?",
+options:[
+"Stricter enforcement of traffic laws",
+"More advertising for cars",
+"Cheaper petrol",
+"Longer roads"
+],
+answer:0
+},
+
+{
+level:9,
+topic:"Young Drivers",
+points:100000,
+text:"Which factor is most closely linked to accident risk among new drivers?",
+options:[
+"Inexperience",
+"Car colour",
+"Favourite music",
+"Type of fuel"
+],
+answer:0
+},
+
+/* LEVEL 10 */
+
+{
+level:10,
+topic:"Mixed Challenge",
+points:1000000,
+text:"Which statement best reflects the overall message of Unit 2?",
+options:[
+"Responsible decisions make roads and communities safer",
+"Speed is always the most important factor",
+"Cars should never be used",
+"Traffic laws are unnecessary"
+],
+answer:0
+},
+
+{
+level:10,
+topic:"Mixed Challenge",
+points:1000000,
+text:"A city wants cleaner air, fewer accidents and less congestion. Which single measure would help achieve all three?",
+options:[
+"Improving public transport",
+"Increasing speed limits",
+"Building larger roads",
+"Reducing cycle lanes"
+],
+answer:0
+},
+
+{
+level:10,
+topic:"Speculation",
+points:1000000,
+text:"The roads are dry, traffic is light and the journey normally takes ten minutes. After an hour, the driver still hasn't arrived. Which conclusion is most reasonable?",
+options:[
+"Something might have gone wrong",
+"The driver must be at home",
+"The driver can't have left",
+"The roads are empty"
+],
+answer:0
+},
+
+{
+level:10,
+topic:"Critical Thinking",
+points:1000000,
+text:"Which solution best balances personal freedom and public safety?",
+options:[
+"Licensing drivers while enforcing traffic laws",
+"Banning all vehicles",
+"Removing all speed limits",
+"Allowing anyone to drive"
+],
+answer:0
+},
+
+{
+level:10,
+topic:"Environment",
+points:1000000,
+text:"Which action by individuals would have the greatest long-term environmental benefit?",
+options:[
+"Reducing unnecessary car journeys",
+"Buying more fuel",
+"Driving longer distances",
+"Using disposable products"
+],
+answer:0
+}
+
+];
+
+const LADDER = [
+  100,   // Q1
+  100,   // Q2
+  200,   // Q3
+  200,   // Q4
+  200,   // Q5
+  300,   // Q6
+  300,   // Q7
+  400,   // Q8
+  400,   // Q9
+  400,   // Q10
+  500,   // Q11
+  500,   // Q12
+  600,   // Q13
+  600,   // Q14
+  600,   // Q15
+  700,   // Q16
+  700,   // Q17
+  800,   // Q18
+  800,   // Q19
+  800,   // Q20
+  900,   // Q21
+  900,   // Q22
+  1000,  // Q23
+  1000,  // Q24
+  1000   // Q25
+];
+const LETTERS=['A','B','C','D'];
+
+let numTeams=4, teams=[], scores=[], lifelines=[];
+let qIndex=0,
+    currentTeam=0,
+    questions=[],
+    eliminated=[],
+    gamePhase='pick';
+
+let timerInterval=null;
+let timeRemaining=20;
+
+function changeTeams(d){
+  numTeams=Math.max(2,Math.min(8,numTeams+d));
+  document.getElementById('num-val').textContent=numTeams;
+  renderTeamInputs();
+}
+
+function renderTeamInputs(){
+  const c=document.getElementById('team-inputs');
+  c.innerHTML='';
+  for(let i=0;i<numTeams;i++){
+    const w=document.createElement('div');
+    w.className='team-wrap';
+    w.innerHTML=`<label>Team ${i+1}</label><input id="ti-${i}" placeholder="Team ${i+1} name" value="${teams[i]||''}">`;
+    c.appendChild(w);
+  }
+}
+
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+function startTimer(){
+
+  clearInterval(timerInterval);
+
+  timeRemaining = 20;
+
+  const timerEl = document.getElementById('timer');
+
+  if(timerEl){
+    timerEl.textContent = timeRemaining;
+    timerEl.parentElement.classList.remove('timer-warning');
+  }
+
+  timerInterval = setInterval(()=>{
+
+    timeRemaining--;
+
+    if(timerEl){
+      timerEl.textContent = timeRemaining;
+    }
+
+if(timeRemaining <= 5 && timerEl){
+  document.getElementById('timer-box').classList.add('timer-warning');
+}
+
+    if(timeRemaining <= 0){
+
+      clearInterval(timerInterval);
+
+      timeUp();
+    }
+
+  },1000);
+}
+
+function stopTimer(){
+  clearInterval(timerInterval);
+}
+
+function timeUp(){
+
+  const q = questions[qIndex];
+
+  gamePhase='revealed';
+
+  document.querySelectorAll('.opt-btn').forEach((b,bi)=>{
+
+    b.disabled=true;
+
+    if(bi===q.answer){
+      b.classList.add('correct');
+    }
+
+  });
+
+  showResult(false,q);
+
+  document.getElementById('info-area').innerHTML=
+    '<div class="info-msg"><strong>Time is up!</strong></div>';
+
+  renderLadder();
+}
+
+function buildQuestionSet() {
+
+  const result = [];
+
+  for (let level = 1; level <= 10; level++) {
+
+    const levelQuestions =
+      shuffle(
+        ALL_QUESTIONS.filter(q => q.level === level)
+      );
+
+    result.push(...levelQuestions.slice(0, 2));
+  }
+
+  const extraLevels = [2,4,6,8,10];
+
+  extraLevels.forEach(level => {
+
+    const remaining =
+      shuffle(
+        ALL_QUESTIONS.filter(
+          q =>
+            q.level === level &&
+            !result.includes(q)
+        )
+      );
+
+    if (remaining.length > 0) {
+    result.push(remaining[0]);
+}
+  });
+
+  return result.sort((a,b)=>a.level-b.level);
+}
+
+function startGame(){
+  teams=[];
+  for(let i=0;i<numTeams;i++){
+    const el = document.getElementById(`ti-${i}`);
+    const v = el ? el.value.trim() : '';
+    teams.push(v||`Team ${i+1}`);
+  }
+  scores=new Array(numTeams).fill(0);
+  lifelines=teams.map(()=>({fifty:false,ask:false,friend:false}));
+  questions = buildQuestionSet();
+  qIndex=0; currentTeam=0;
+  showScreen('game');
+  renderGame();
+}
+
+function showScreen(n){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+n).classList.add('active');
+}
+
+function renderGame(){
+  renderPills(); renderQuestion(); renderScoreboard(); renderLadder(); renderLifelines();
+  document.getElementById('result-area').innerHTML='';
+  document.getElementById('info-area').innerHTML='';
+  document.getElementById('vote-area').innerHTML='';
+  gamePhase='pick'; eliminated=[];
+  startTimer();
+}
+
+function renderPills(){
+  const c=document.getElementById('team-pills');
+  c.innerHTML='';
+  teams.forEach((t,i)=>{
+    const b=document.createElement('button');
+    b.className='t-pill'+(i===currentTeam?' active':'');
+    b.textContent=t;
+    b.onclick=null;
+    c.appendChild(b);
+  });
+}
+
+function renderQuestion(){
+
+  if(qIndex >= questions.length){
+    showFinal();
+    return;
+  }
+
+  document.getElementById('timer').textContent = '20';
+  document.getElementById('timer-box').classList.remove('timer-warning');
+
+  const q=questions[qIndex];
+
+  document.getElementById('q-num').textContent=
+    `Question ${qIndex+1} of ${questions.length}`;
+  document.getElementById('q-topic').textContent=q.topic;
+  document.getElementById('q-pts').textContent =
+`${q.level * 100} pts`;
+  document.getElementById('q-text').textContent=q.text;
+  const og=document.getElementById('opts-grid');
+  og.innerHTML='';
+  q.options.forEach((opt,i)=>{
+    const b=document.createElement('button');
+    b.className='opt-btn'; b.id=`opt-${i}`;
+    b.innerHTML=`<span class="opt-letter">${LETTERS[i]}</span>${opt}`;
+    b.onclick=()=>selectAnswer(i);
+    og.appendChild(b);
+  });
+}
+
+function selectAnswer(i){
+  stopTimer();
+  if(gamePhase!=='pick'||eliminated.includes(i)) return;
+  const q=questions[qIndex];
+  gamePhase='revealed';
+  document.querySelectorAll('.opt-btn').forEach((b,bi)=>{
+    b.disabled=true;
+    if(bi===q.answer) b.classList.add('correct');
+    else if(bi===i&&i!==q.answer) b.classList.add('wrong');
+  });
+  if(i===q.answer){
+      scores[currentTeam] += q.level * 100;
+  } 
+  document.getElementById('vote-area').innerHTML='';
+  document.getElementById('info-area').innerHTML='';
+  showResult(i===q.answer,q);
+  renderScoreboard(); renderLadder();
+}
+
+function showResult(correct,q){
+
+  const ra=document.getElementById('result-area');
+  const nextTeam=(currentTeam+1)%numTeams;
+  const isLast=qIndex>=questions.length-1;
+
+  const awardedPoints = q.level * 100;
+
+  ra.innerHTML=`<div class="result-box">
+    <div class="result-icon">${correct ? '✅' : '❌'}</div>
+    <div class="result-title">${correct ? 'Correct!' : 'Wrong answer!'}</div>
+
+    <div class="result-sub">
+      ${
+        correct
+          ? `+${awardedPoints} points for ${teams[currentTeam]}`
+          : `The correct answer was ${LETTERS[q.answer]}: ${q.options[q.answer]}`
+      }
+    </div>
+
+    ${
+      isLast
+        ? `<button class="res-btn" onclick="showFinal()">See final scores</button>`
+        : `<button class="res-btn" onclick="nextQ()">Next question → ${teams[nextTeam]}'s turn</button>`
+    }
+  </div>`;
+}
+
+function nextQ(){
+
+  qIndex++;
+
+  if(qIndex >= questions.length){
+    showFinal();
+    return;
+  }
+
+  currentTeam=(currentTeam+1)%numTeams;
+
+  renderGame();
+}
+
+function renderScoreboard(){
+  const sorted=teams.map((t,i)=>({t,s:scores[i],i})).sort((a,b)=>b.s-a.s);
+  document.getElementById('scoreboard').innerHTML=sorted.map(({t,s,i})=>
+    `<div class="score-row${i===currentTeam?' cur':''}"><span>${t}</span><span class="score-pts">${s.toLocaleString()}</span></div>`
+  ).join('');
+}
+
+function renderLadder(){
+  document.getElementById('ladder').innerHTML=[...LADDER].reverse().map((v,ri)=>{
+    const step=LADDER.length-1-ri;
+    const cls=step===qIndex?'lad-row cur':step<qIndex?'lad-row done':'lad-row';
+    return `<div class="${cls}">
+<span>Q${step+1}</span>
+<span>${v} pts</span>
+</div>`;
+  }).join('');
+}
+
+function renderLifelines(){
+  const ll=lifelines[currentTeam];
+  [['5050',ll.fifty],['ask',ll.ask],['friend',ll.friend]].forEach(([id,used])=>{
+    const el=document.getElementById('ll-'+id);
+    el.disabled=used; el.className='ll-btn'+(used?' used':'');
+  });
+}
+
+function use5050(){
+  if(gamePhase!=='pick') return;
+  lifelines[currentTeam].fifty=true; renderLifelines();
+  const q=questions[qIndex];
+  const wrong = shuffle(
+  [0,1,2,3].filter(
+    i => i !== q.answer && !eliminated.includes(i)
+  )
+).slice(0,2);
+  wrong.forEach(i=>{
+    eliminated.push(i);
+    const b=document.getElementById(`opt-${i}`);
+    if(b) b.classList.add('eliminated');
+  });
+  document.getElementById('info-area').innerHTML=`<div class="info-msg">50/50 used — two wrong answers removed.</div>`;
+}
+
+function useAskClass(){
+  if(gamePhase!=='pick') return;
+
+  lifelines[currentTeam].ask=true;
+  renderLifelines();
+
+  stopTimer();
+
+  document.getElementById('info-area').innerHTML=`
+    <div class="info-msg">
+      <strong>Ask the Class</strong><br>
+      Consult the other teams for advice.<br>
+      You have 30 seconds to discuss and collect opinions.
+    </div>
+  `;
+}
+
+function usePhoneFriend(){
+  if(gamePhase!=='pick') return;
+
+  lifelines[currentTeam].friend=true;
+  renderLifelines();
+
+  document.getElementById('info-area').innerHTML=`
+    <div class="info-msg">
+      <strong>Phone the Teacher</strong><br>
+      Ask the teacher for a clue or guidance.
+    </div>
+  `;
+}
+
+function showFinal(){
+  stopTimer();
+  showScreen('final');
+  const sorted=teams.map((t,i)=>({t,s:scores[i]})).sort((a,b)=>b.s-a.s);
+  const medals=['🥇','🥈','🥉'];
+  const cls=['p1','p2','p3'];
+  document.getElementById('final-podium').innerHTML=sorted.map((item,i)=>
+    `<div class="podium-row ${cls[i]||'px'}"><span>${medals[i]||'  '} ${item.t}</span><span>${item.s.toLocaleString()} pts</span></div>`
+  ).join('');
+}
+
+function restartGame(){
+
+  stopTimer();
+
+  qIndex = 0;
+  currentTeam = 0;
+  questions = [];
+  scores = [];
+  lifelines = [];
+  eliminated = [];
+
+  showScreen('setup');
+  renderTeamInputs();
+}
+
+renderTeamInputs();
+</script>
+</body>
+</html>

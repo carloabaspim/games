@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M2 Group Challenge — Unit 2: Law &amp; Order</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0a0a2e;
+    color: #fff;
+    min-height: 100vh;
+    padding: 1.5rem 1rem;
+    font-size: 30px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: clamp(36px, 5vw, 60px);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    color: #ffd700;
+    text-shadow: 0 0 20px rgba(255,215,0,0.4);
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 24px;
+    color: #aab;
+    margin-bottom: 1.5rem;
+  }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ── SETUP ── */
+  .setup-card {
+    max-width: 560px;
+    margin: 0 auto;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,215,0,0.25);
+    border-radius: 16px;
+    padding: 1.75rem;
+  }
+  .setup-card h2 { font-size: 32px; font-weight: 600; color: #ffd700; margin-bottom: 1.25rem; }
+  .num-row { display: flex; align-items: center; gap: 14px; margin-bottom: 1.25rem; }
+  .num-row label { font-size: 28px; color: #ccd; }
+  .num-btn {
+    width: 50px; height: 50px; border-radius: 50%;
+    background: rgba(255,215,0,0.15); border: 1px solid rgba(255,215,0,0.4);
+    color: #ffd700; font-size: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+  .num-btn:hover { background: rgba(255,215,0,0.3); }
+  .num-val { font-size: 32px; font-weight: 700; color: #fff; min-width: 28px; text-align: center; }
+  .team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
+  .team-wrap label { display: block; font-size: 24px; color: #aab; margin-bottom: 4px; }
+  .team-wrap input {
+    width: 100%; padding: 14px 16px; border-radius: 8px;
+    border: 1px solid rgba(255,215,0,0.3); background: rgba(255,255,255,0.07);
+    color: #fff; font-size: 18px;
+  }
+  .team-wrap input:focus { outline: none; border-color: #ffd700; }
+  .start-btn {
+    width: 100%; padding: 18px; border-radius: 10px; border: none;
+    background: linear-gradient(135deg, #ffd700, #ffaa00);
+    color: #0a0a2e; font-size: 28px; font-weight: 700; cursor: pointer;
+    letter-spacing: 0.3px;
+  }
+  .start-btn:hover { filter: brightness(1.1); }
+
+  /* ── GAME ── */
+  .game-layout {
+    display: grid;
+    grid-template-columns: 1fr 210px;
+    gap: 14px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  @media (max-width: 640px) { .game-layout { grid-template-columns: 1fr; } }
+
+  .main-col { display: flex; flex-direction: column; gap: 12px; }
+
+  /* hot seat bar */
+  .hot-seat-bar {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,215,0,0.2);
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+  }
+  .hs-label {
+    font-size: 24px;
+    color: #aab;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+  .team-pills { display: flex; flex-wrap: wrap; gap: 7px; }
+  .t-pill {
+    padding: 12px 20px;
+    border-radius: 20px;
+    font-size: 24px;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.07);
+    color: #ccd;
+}
+  .t-pill.active { background: rgba(255,215,0,0.2); border-color: #ffd700; color: #ffd700; font-weight: 600; }
+
+  /* question card */
+  .q-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,215,0,0.2);
+    border-radius: 14px;
+    padding: 1.25rem;
+  }
+  .q-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .q-num { font-size: 24px; color: #aab; }
+  .q-topic-badge {
+    font-size: 22px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: rgba(100,200,100,0.15);
+    border: 1px solid rgba(100,200,100,0.4);
+    color: #9deba0;
+}
+  .q-pts-badge {
+    margin-left: auto; font-size: 24px; padding: 2px 10px; border-radius: 20px;
+    background: rgba(255,215,0,0.12); border: 1px solid rgba(255,215,0,0.35); color: #ffd700; font-weight: 600;
+  }
+  .q-text { font-size: clamp(24px, 3vw, 32px); font-weight: 500; line-height: 1.55; margin-bottom: 1rem; color: #f0f0ff; }
+
+  .opts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+  @media (max-width: 480px) { .opts-grid { grid-template-columns: 1fr; } }
+
+  .opt-btn {
+    padding: 10px 12px; border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.07);
+    color: #e8e8ff; font-size: 22px; cursor: pointer; text-align: left;
+    display: flex; gap: 8px; align-items: flex-start; line-height: 1.4;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .opt-btn:hover:not(:disabled) { background: rgba(255,215,0,0.12); border-color: rgba(255,215,0,0.5); }
+  .opt-letter { font-weight: 700; color: #ffd700; min-width: 16px; flex-shrink: 0; }
+  .opt-btn.correct { background: rgba(80,200,80,0.2); border-color: #5cb85c; color: #9deba0; }
+  .opt-btn.wrong { background: rgba(220,50,50,0.2); border-color: #c0392b; color: #f1948a; }
+  .opt-btn.eliminated { opacity: 0.2; pointer-events: none; }
+  .opt-btn:disabled { cursor: default; }
+
+  /* lifelines */
+  .lifelines-row { display: flex; gap: 9px; flex-wrap: wrap; }
+  .ll-btn {
+    flex: 1; min-width: 85px; padding: 9px 10px; border-radius: 10px;
+    border: 1px solid rgba(255,215,0,0.3); background: rgba(255,215,0,0.08);
+    color: #ffd700; font-size: 20px; font-weight: 600; cursor: pointer; text-align: center;
+  }
+  .ll-btn:hover:not(:disabled) { background: rgba(255,215,0,0.2); }
+  .ll-btn.used, .ll-btn:disabled { opacity: 0.3; cursor: default; text-decoration: line-through; }
+
+  .info-msg {
+    margin-top: 10px; padding: 10px 12px; border-radius: 10px;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+    font-size: 24px; color: #ccd; line-height: 1.5;
+  }
+
+  /* result box */
+  .result-box {
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,215,0,0.25);
+    border-radius: 14px; padding: 1.25rem; text-align: center;
+  }
+  .result-icon { font-size: 36px; margin-bottom: 6px; }
+  .result-title { font-size: 32px; font-weight: 700; margin-bottom: 4px; color: #ffd700; }
+  .result-sub { font-size: 24px; color: #aab; margin-bottom: 14px; line-height: 1.5; }
+  .res-btn {
+    padding: 16px 28px; border-radius: 10px; border: none;
+    background: linear-gradient(135deg, #ffd700, #ffaa00);
+    color: #0a0a2e; font-size: 24px; font-weight: 700; cursor: pointer; margin: 4px;
+  }
+  .res-btn:hover { filter: brightness(1.1); }
+  .res-btn.sec {
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #ccd;
+  }
+
+  /* sidebar */
+  .side-col { display: flex; flex-direction: column; gap: 12px; }
+  .side-card {
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,215,0,0.18);
+    border-radius: 12px; padding: 0.85rem 1rem;
+  }
+  .side-title { font-size: 24px; color: #aab; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .score-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.07);
+    font-size: 20px; color: #ccd;
+  }
+  .score-row:last-child { border-bottom: none; }
+  .score-row.cur { color: #ffd700; font-weight: 600; }
+  .score-pts { font-weight: 600; }
+  .lad-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 10px;
+    border-radius: 5px;
+    font-size: 22px;
+    color: #778;
+}
+  .lad-row.cur { background: rgba(255,215,0,0.15); color: #ffd700; font-weight: 600; }
+  .lad-row.done { color: #5cb85c; }
+
+  /* final */
+  .final-card {
+    max-width: 500px; margin: 0 auto;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,215,0,0.3);
+    border-radius: 16px; padding: 2rem; text-align: center;
+  }
+  .final-card h2 { font-size: 36px; font-weight: 700; color: #ffd700; margin-bottom: 4px; }
+  .final-card p { font-size: 24px; color: #aab; margin-bottom: 1.25rem; }
+  .podium-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 16px; border-radius: 10px; margin-bottom: 8px; font-size: 24px;
+  }
+  .podium-row.p1 { background: rgba(255,215,0,0.2); border: 1px solid rgba(255,215,0,0.4); color: #ffd700; font-weight: 700; }
+  .podium-row.p2 { background: rgba(200,200,220,0.1); border: 1px solid rgba(255,255,255,0.15); color: #ccd; }
+  .podium-row.p3 { background: rgba(180,120,60,0.12); border: 1px solid rgba(180,120,60,0.3); color: #c9956a; }
+  .podium-row.px { background: rgba(255,255,255,0.05); color: #778; font-size: 24px; }
+  .restart-btn {
+    margin-top: 1.25rem; padding: 16px 28px; border-radius: 10px; border: none;
+    background: linear-gradient(135deg, #ffd700, #ffaa00);
+    color: #0a0a2e; font-size: 24px; font-weight: 700; cursor: pointer;
+  }
+  .restart-btn:hover { filter: brightness(1.1); }
+
+  .timer-box{
+  text-align:center;
+  margin-bottom:15px;
+  padding:10px;
+  border-radius:10px;
+  background:rgba(255,215,0,0.12);
+  border:1px solid rgba(255,215,0,0.35);
+  color:#ffd700;
+  font-weight:700;
+  font-size:30px;
+}
+
+.timer-warning{
+  color:#ff6666;
+  border-color:#ff6666;
+}
+</style>
+</head>
+<body>
+
+<h1>M2 Group Challenge</h1>
+<p class="subtitle">Unit 2 — Law &amp; Order</p>
+
+<div id="screen-setup" class="screen active">
+  <div class="setup-card">
+    <h2>Set up your teams</h2>
+    <div class="num-row">
+      <label>Number of teams:</label>
+      <button class="num-btn" onclick="changeTeams(-1)">−</button>
+      <span class="num-val" id="num-val">4</span>
+      <button class="num-btn" onclick="changeTeams(1)">+</button>
+    </div>
+    <div id="team-inputs" class="team-grid"></div>
+    <button class="start-btn" onclick="startGame()">Start game</button>
+  </div>
+</div>
+
+<div id="screen-game" class="screen">
+  <div class="game-layout">
+    <div class="main-col">
+      <div class="hot-seat-bar">
+        <div class="hs-label">Team in the hot seat</div>
+        <div class="team-pills" id="team-pills"></div>
+      </div>
+      <div class="q-card">
+        <div class="q-meta">
+          <span class="q-num" id="q-num"></span>
+          <span class="q-topic-badge" id="q-topic"></span>
+          <span class="q-pts-badge" id="q-pts"></span>
+        </div>
+        <div class="q-text" id="q-text"></div>
+        <div id="timer-box" class="timer-box">
+  ⏰ Time Remaining: <span id="timer">20</span>s
+</div>
+        <div class="opts-grid" id="opts-grid"></div>
+        <div id="vote-area"></div>
+        <div id="info-area"></div>
+      </div>
+      <div class="lifelines-row">
+        <button class="ll-btn" id="ll-5050" onclick="use5050()">50 / 50</button>
+        <button class="ll-btn" id="ll-ask" onclick="useAskClass()">Ask the class</button>
+        <button class="ll-btn" id="ll-friend" onclick="usePhoneFriend()">Phone the teacher</button>
+      </div>
+      <div id="result-area"></div>
+    </div>
+    <div class="side-col">
+      <div class="side-card">
+        <div class="side-title">Scoreboard</div>
+        <div id="scoreboard"></div>
+      </div>
+      <div class="side-card">
+        <div class="side-title">Prize ladder</div>
+        <div id="ladder"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="screen-final" class="screen">
+  <div class="final-card">
+    <div style="font-size:44px;margin-bottom:8px;">🏆</div>
+    <h2>Game over!</h2>
+    <p>Final scores</p>
+    <div id="final-podium"></div>
+    <button class="restart-btn" onclick="restartGame()">Play again</button>
+  </div>
+</div>
+
+<script>
+const ALL_QUESTIONS = [
+
+/* LEVEL 1 */
+
+{
+level:1,
+topic:"Investigations",
+points:100,
+text:"What does a detective do first after a crime?",
+options:["Charge a suspect","Search for evidence","Arrest a witness","Close the case"],
+answer:1
+},
+{
+level:1,
+topic:"Investigations",
+points:100,
+text:"What is evidence?",
+options:["A formal accusation made by police","Information that helps prove a crime","A statement made by a suspect","Proof that someone is innocent"],
+answer:1
+},
+{
+level:1,
+topic:"Crime Vocabulary",
+points:100,
+text:"A person who sees a crime is called a...",
+options:["suspect","victim","witness","criminal"],
+answer:2
+},
+{
+level:1,
+topic:"Crime Vocabulary",
+points:100,
+text:"Police usually question a...",
+options:["witness","victim","detective","informant"],
+answer:0
+},
+{
+level:1,
+topic:"Past Simple",
+points:100,
+text:"What is the past simple of GO?",
+options:["goed","went","gone","going"],
+answer:1
+},
+
+/* LEVEL 2 */
+
+{
+level:2,
+topic:"Investigations",
+points:200,
+text:"What does 'analyse evidence' mean?",
+options:["Hide it","Study it carefully","Throw it away","Sell it"],
+answer:1
+},
+{
+level:2,
+topic:"Crime Vocabulary",
+points:200,
+text:"A person the police think committed a crime is a...",
+options:["witness","judge","lawyer","suspect"],
+answer:3
+},
+{
+level:2,
+topic:"Crime Vocabulary",
+points:200,
+text:"What happens when police arrest someone?",
+options:["They charge them with a crime","They take them into custody","They question them as a witness","They release them on bail"],
+answer:1
+},
+{
+level:2,
+topic:"Past Simple",
+points:200,
+text:"Which sentence is correct?",
+options:[
+"He was go to school yesterday.",
+"He did went to school yesterday.",
+"He has went to school yesterday.",
+"He went to school yesterday."
+],
+answer:3
+},
+{
+level:2,
+topic:"Pronunciation",
+points:200,
+text:"How is the -ed pronounced in 'wanted'?",
+options:["/t/","/d/","/id/","silent"],
+answer:2
+},
+
+/* LEVEL 3 */
+
+{
+level:3,
+topic:"Phrasal Verbs",
+points:500,
+text:"'Come across' means...",
+options:[
+"find by accident",
+"investigate",
+"arrive",
+"arrest"
+],
+answer:0
+},
+{
+level:3,
+topic:"Phrasal Verbs",
+points:500,
+text:"'Look into' means...",
+options:[
+"ignore",
+"investigate",
+"copy",
+"accuse"
+],
+answer:1
+},
+{
+level:3,
+topic:"Past Simple",
+points:500,
+text:"The negative of 'She walked home' is...",
+options:[
+"She didn't walked home.",
+"She not walked home.",
+"She didn't walk home.",
+"She wasn't walk home."
+],
+answer:2
+},
+{
+level:3,
+topic:"Cybercrime",
+points:500,
+text:"Hackers illegally try to access...",
+options:[
+"buildings",
+"computer systems",
+"roads",
+"classrooms"
+],
+answer:1
+},
+{
+level:3,
+topic:"Ethics",
+points:500,
+text:"Which action shows honesty?",
+options:[
+"Telling a white lie to protect someone",
+"Staying silent when you witness a crime",
+"Returning lost property",
+"Taking something you found with no owner"
+],
+answer:2
+},
+
+/* LEVEL 4 */
+
+{
+level:4,
+topic:"Investigations",
+points:1000,
+text:"What does it mean to accuse a suspect?",
+options:[
+"Say they committed the crime",
+"Release them",
+"Pay them",
+"Question them"
+],
+answer:0
+},
+{
+level:4,
+topic:"Crime Vocabulary",
+points:1000,
+text:"What is burglary?",
+options:[
+"Breaking into a building to steal",
+"Driving too fast",
+"Using a phone",
+"Writing graffiti"
+],
+answer:0
+},
+{
+level:4,
+topic:"Phrasal Verbs",
+points:1000,
+text:"'Turn up' means...",
+options:[
+"appear unexpectedly",
+"give up",
+"look down",
+"run away"
+],
+answer:0
+},
+{
+level:4,
+topic:"Past Simple",
+points:1000,
+text:"Which question is correct?",
+options:[
+"What did you used to do?",
+"What did you use to do?",
+"What do you used to do?",
+"What did you use to did?"
+],
+answer:1
+},
+{
+level:4,
+topic:"Cybercrime",
+points:1000,
+text:"A strong password should be...",
+options:[
+"easy to guess",
+"your name",
+"complex and unique",
+"123456"
+],
+answer:2
+},
+
+/* LEVEL 5 */
+
+{
+level:5,
+topic:"Pronunciation",
+points:2000,
+text:"Which word has an /t/ ending?",
+options:[
+"planned",
+"arrived",
+"watched",
+"played"
+],
+answer:2
+},
+{
+level:5,
+topic:"Pronunciation",
+points:2000,
+text:"Which word has an /id/ ending?",
+options:[
+"wanted",
+"looked",
+"watched",
+"liked"
+],
+answer:0
+},
+{
+level:5,
+topic:"Ethics",
+points:2000,
+text:"Thinking about how actions affect others shows...",
+options:[
+"carelessness",
+"consideration",
+"crime",
+"anger"
+],
+answer:1
+},
+{
+level:5,
+topic:"Used To",
+points:2000,
+text:"Which sentence is correct?",
+options:[
+"I used to play all day when I was four.",
+"I use to play all day when I was four.",
+"I used play all day when I was four.",
+"I was used to play all day when I was four."
+],
+answer:0
+},
+{
+level:5,
+topic:"Past Simple",
+points:2000,
+text:"Last night, the witness _____ the suspect to the police.",
+options:[
+"describe",
+"describes",
+"describing",
+"described"
+],
+answer:3
+},
+
+/* LEVELS 6-10 */
+
+{
+level:6,topic:"Phrasal Verbs",points:5000,
+text:"'Work out' means...",options:["exercise","solve","escape","charge"],answer:1},
+{
+level:6,topic:"Phrasal Verbs",points:5000,
+text:"'Find out' means...",options:["discover","hide","lose","investigate"],answer:0},
+{
+level:6,topic:"Investigations",points:5000,
+text:"What normally happens before a suspect is charged?",options:["Evidence is collected","The case closes","The witness leaves","The criminal escapes"],answer:0},
+{
+level:6,topic:"Past Simple",points:5000,
+text:"Which is correct?",options:["They wasn't happy.","They weren't happy.","They not happy.","They didn't happy."],answer:1},
+{
+level:6,topic:"Cybercrime",points:5000,
+text:"Why are hackers dangerous?",options:["They can steal data","They repair computers","They teach coding","They improve passwords"],answer:0},
+
+{
+level:7,topic:"Crime Vocabulary",points:10000,
+text:"Who is the victim?",options:["The person harmed","The suspect","The detective","The witness"],answer:0},
+{
+level:7,topic:"Ethics",points:10000,
+text:"Which is the most ethical action?",options:["Copy homework","Lie for a friend","Return stolen property","Hide evidence"],answer:2},
+{
+level:7,topic:"Phrasal Verbs",points:10000,
+text:"Which verb means 'search for'?",options:["look for","look up","turn up","come across"],answer:0},
+{
+level:7,topic:"Past Simple",points:10000,
+text:"What is the past simple of FIND?",options:["finded","found","founded","finding"],answer:1},
+{
+level:7,topic:"Cybercrime",points:10000,
+text:"What should you do if you receive a suspicious link?",options:["Click it immediately","Ignore and report it","Send it to friends","Post it online"],answer:1},
+
+{
+level:8,topic:"Cybercrime",points:50000,
+text:"Which action is most likely to protect your online accounts?",options:["Using the same password everywhere","Sharing passwords with friends","Using a strong, unique password","Writing passwords in public places"],answer:2},
+{
+level:8,
+topic:"Used To",
+points:50000,
+text:"Which sentence is grammatically correct?",
+options:[
+"She didn't used to read detective novels.",
+"She didn't use to read detective novels.",
+"She didn't uses to read detective novels.",
+"She didn't using to read detective novels."
+],
+answer:1
+},
+{
+level:8,topic:"Investigations",points:50000,
+text:"Which activity would most likely happen BEFORE a suspect is charged?",options:[
+"Collecting evidence",
+"Serving a prison sentence",
+"Paying a fine",
+"Completing community service"
+],
+answer:0
+},
+{
+level:8,topic:"Pronunciation",points:50000,
+text:"Which word ends with /d/?",options:["arrived","liked","passed","watched"],answer:0},
+{
+level:8,topic:"Ethics",points:50000,
+text:"Why should we think about consequences?",options:["To avoid responsibility","To understand effects on others","To blame others","To break rules"],answer:1},
+
+{
+level:9,topic:"Cybercrime",points:100000,
+text:"Which password is strongest?",options:["password","12345678","John2008","G7#kP2!mQ9"],answer:3},
+{
+level:9,topic:"Crime Vocabulary",points:100000,
+text:"Which person investigates crimes?",options:["Detective","Witness","Victim","Suspect"],answer:0},
+{
+level:9,topic:"Past Simple",points:100000,
+text:"Which sentence is correct?",options:[
+"Did they saw it?",
+"Did they see it?",
+"Did they seen it?",
+"Did they seeing it?"
+],answer:1},
+{
+level:9,topic:"Phrasal Verbs",points:100000,
+text:"What does 'look up a word' mean?",options:["search for information","invent a word","forget a word","translate a word"],answer:0},
+{
+level:9,topic:"Ethics",points:100000,
+text:"Integrity means...",options:["avoiding work","winning","being famous","doing the right thing even when nobody is watching"],answer:3},
+
+{
+level:10,topic:"Mixed Challenge",points:1000000,
+text:"Which sequence best matches a police investigation?",options:[
+"Arrest → accuse → search",
+"Search → analyse → prove → accuse → arrest → charge",
+"Charge → search → arrest",
+"Question → charge → search"
+],answer:1},
+{
+level:10,topic:"Mixed Challenge",points:1000000,
+text:"Which phrasal verb means 'solve using facts and logic'?",options:["turn up","come across","work out","look up"],answer:2},
+{
+level:10,topic:"Mixed Challenge",points:1000000,
+text:"Which sentence is grammatically correct?",options:[
+"She didn't went home.",
+"She wasn't go home.",
+"She didn't go home.",
+"She not go home."
+],answer:2},
+{
+level:10,topic:"Mixed Challenge",points:1000000,
+text:"Which action best shows consideration for others?",options:[
+"Sharing private passwords",
+"Ignoring consequences",
+"Thinking about how actions affect people",
+"Copying assignments"
+],answer:2},
+{
+level:10,topic:"Mixed Challenge",points:1000000,
+text:"Which statement about cybercrime is TRUE?",options:[
+"Strong passwords are unnecessary.",
+"Hackers only target famous people.",
+"Cybercrime can affect anyone.",
+"Suspicious links are usually safe."
+],answer:2},
+{
+level:1,
+topic:"Crime Vocabulary",
+points:100,
+text:"A person breaks into a house and steals jewellery. Which crime has been committed?",
+options:["Burglary","Vandalism","Arson","Fraud"],
+answer:0
+},
+
+{
+level:1,
+topic:"Crime Vocabulary",
+points:100,
+text:"A teenager spray-paints graffiti on a public building. What crime has been committed?",
+options:["Vandalism","Burglary","Arson","Kidnapping"],
+answer:0
+},
+
+{
+level:1,
+topic:"Investigations",
+points:100,
+text:"What is usually the first step after a crime is discovered?",
+options:["Search for evidence","Charge a suspect","Close the case","Go to court"],
+answer:0
+},
+
+{
+level:2,
+topic:"Investigations",
+points:200,
+text:"Which of these is part of a police investigation?",
+options:["Search for evidence","Write a story","Build a house","Drive a taxi"],
+answer:0
+},
+
+{
+level:2,
+topic:"Phrasal Verbs",
+points:200,
+text:"Which phrasal verb means 'to investigate'?",
+options:["Turn up","Look into","Come across","Look up"],
+answer:1
+},
+
+{
+level:2,
+topic:"Phrasal Verbs",
+points:200,
+text:"Which phrasal verb means 'to discover information'?",
+options:["Find out","Turn down","Look after","Give up"],
+answer:0
+},
+
+{
+level:3,
+topic:"Past Simple",
+points:500,
+text:"Which of these is an irregular past simple verb?",
+options:["Walked","Played","Went","Started"],
+answer:2
+},
+
+{
+level:3,
+topic:"Used To",
+points:500,
+text:"Which sentence correctly uses 'used to'?",
+options:[
+"I used to play outside every day.",
+"I use to playing outside.",
+"I used play outside.",
+"I was used play outside."
+],
+answer:0
+},
+
+{
+level:3,
+topic:"Crime Vocabulary",
+points:500,
+text:"A witness is someone who...",
+options:[
+"commits a crime",
+"sees a crime",
+"investigates a crime",
+"judges a crime"
+],
+answer:1
+},
+
+{
+level:4,
+topic:"Detective Work",
+points:1000,
+text:"Which word is most closely connected to detective work?",
+options:["Evidence","Holiday","Recipe","Homework"],
+answer:0
+},
+
+{
+level:4,
+topic:"Functional Language",
+points:1000,
+text:"Which phrase is commonly used when apologising?",
+options:[
+"I'm sorry.",
+"Good luck.",
+"See you later.",
+"Congratulations."
+],
+answer:0
+},
+
+{
+level:4,
+topic:"Functional Language",
+points:1000,
+text:"Which response is most appropriate after an apology?",
+options:[
+"It's OK.",
+"Never mind.",
+"Don't worry about it.'",
+"Can I borrow your pen?"
+],
+answer:2
+},
+
+{
+level:5,
+topic:"Narrative Language",
+points:2000,
+text:"Which word is often used to sequence events in a story?",
+options:["Then","Blue","Usually","Quickly"],
+answer:0
+},
+
+{
+level:5,
+topic:"Past Continuous",
+points:2000,
+text:"Which sentence is in the past continuous tense?",
+options:[
+"I was running.",
+"I run every day.",
+"I have run.",
+"I will run."
+],
+answer:0
+},
+
+{
+level:5,
+topic:"Past Continuous",
+points:2000,
+text:"What is one common use of the past continuous tense?",
+options:[
+"To describe an action in progress in the past",
+"To describe future plans",
+"To give commands",
+"To make requests"
+],
+answer:0
+},
+
+{
+level:6,
+topic:"Past Simple",
+points:5000,
+text:"Which of these is a regular past simple verb?",
+options:["Went","Saw","Watched","Took"],
+answer:2
+},
+
+{
+level:6,
+topic:"Used To",
+points:5000,
+text:"What is 'used to' mainly used for?",
+options:[
+"Future plans",
+"Past habits",
+"Giving instructions",
+"Making requests"
+],
+answer:1
+},
+
+{
+level:6,
+topic:"Cybercrime",
+points:5000,
+text:"Which action would most likely be carried out by a hacker rather than a police officer?",
+options:[
+"Stealing passwords",
+"Gathering evidence",
+"Questioning witnesses",
+"Investigating a crime scene"
+],
+answer:0
+},
+
+{
+level:7,
+topic:"Investigations",
+points:10000,
+text:"Police searched a house, collected fingerprints and studied CCTV footage. What were they doing?",
+options:[
+"Analysing evidence",
+"Committing a crime",
+"Writing a confession",
+"Serving a sentence"
+],
+answer:0
+},
+
+{
+level:7,
+topic:"Crime Vocabulary",
+points:10000,
+text:"A detective questions several witnesses after a robbery. Why?",
+options:[
+"To gather information",
+"To punish them",
+"To charge them",
+"To arrest them"
+],
+answer:0
+},
+
+{
+level:8,
+topic:"Crime Vocabulary",
+points:50000,
+text:"A teenager sprays paint on a public building without permission. What crime has been committed?",
+options:[
+"Burglary",
+"Fraud",
+"Vandalism",
+"Kidnapping"
+],
+answer:2
+},
+
+{
+level:8,
+topic:"Investigations",
+points:50000,
+text:"Which sequence is most logical during a police investigation?",
+options:[
+"Charge → Search → Question",
+"Search → Analyse → Accuse",
+"Arrest → Search → Investigate",
+"Question → Charge → Search"
+],
+answer:1
+},
+
+{
+level:9,
+topic:"Cybercrime",
+points:100000,
+text:"A student receives an email asking for their password. What should they do?",
+options:[
+"Reply immediately",
+"Share the password",
+"Ignore and report it",
+"Forward it to friends"
+],
+answer:2
+},
+
+{
+level:9,
+topic:"Phrasal Verbs",
+points:100000,
+text:"A detective finally solved the mystery after studying all the clues. Which phrasal verb best describes this?",
+options:[
+"Turn up",
+"Look up",
+"Work out",
+"Come across"
+],
+answer:2
+},
+
+{
+level:10,
+topic:"Mixed Challenge",
+points:1000000,
+text:"A witness said he was walking home when he saw the suspect running away. Why is 'was walking' used?",
+options:[
+"To describe a completed action",
+"To describe an action in progress when another action happened",
+"To describe a future action",
+"To describe a habit"
+],
+answer:1
+},
+
+{
+level:10,
+topic:"Mixed Challenge",
+points:1000000,
+text:"A suspect claimed, 'I used to live near the bank.' What does this mean?",
+options:[
+"He lives there now.",
+"He lived there in the past but doesn't now.",
+"He will live there soon.",
+"He only visited once."
+],
+answer:1
+}
+
+];
+
+const LADDER = [
+  100,   // Q1
+  100,   // Q2
+  200,   // Q3
+  200,   // Q4
+  200,   // Q5
+  300,   // Q6
+  300,   // Q7
+  400,   // Q8
+  400,   // Q9
+  400,   // Q10
+  500,   // Q11
+  500,   // Q12
+  600,   // Q13
+  600,   // Q14
+  600,   // Q15
+  700,   // Q16
+  700,   // Q17
+  800,   // Q18
+  800,   // Q19
+  800,   // Q20
+  900,   // Q21
+  900,   // Q22
+  1000,  // Q23
+  1000,  // Q24
+  1000   // Q25
+];
+const LETTERS=['A','B','C','D'];
+
+let numTeams=4, teams=[], scores=[], lifelines=[];
+let qIndex=0,
+    currentTeam=0,
+    questions=[],
+    eliminated=[],
+    gamePhase='pick';
+
+let timerInterval=null;
+let timeRemaining=20;
+
+function changeTeams(d){
+  numTeams=Math.max(2,Math.min(8,numTeams+d));
+  document.getElementById('num-val').textContent=numTeams;
+  renderTeamInputs();
+}
+
+function renderTeamInputs(){
+  const c=document.getElementById('team-inputs');
+  c.innerHTML='';
+  for(let i=0;i<numTeams;i++){
+    const w=document.createElement('div');
+    w.className='team-wrap';
+    w.innerHTML=`<label>Team ${i+1}</label><input id="ti-${i}" placeholder="Team ${i+1} name" value="${teams[i]||''}">`;
+    c.appendChild(w);
+  }
+}
+
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+function startTimer(){
+
+  clearInterval(timerInterval);
+
+  timeRemaining = 20;
+
+  const timerEl = document.getElementById('timer');
+
+  if(timerEl){
+    timerEl.textContent = timeRemaining;
+    timerEl.parentElement.classList.remove('timer-warning');
+  }
+
+  timerInterval = setInterval(()=>{
+
+    timeRemaining--;
+
+    if(timerEl){
+      timerEl.textContent = timeRemaining;
+    }
+
+if(timeRemaining <= 5 && timerEl){
+  document.getElementById('timer-box').classList.add('timer-warning');
+}
+
+    if(timeRemaining <= 0){
+
+      clearInterval(timerInterval);
+
+      timeUp();
+    }
+
+  },1000);
+}
+
+function stopTimer(){
+  clearInterval(timerInterval);
+}
+
+function timeUp(){
+
+  const q = questions[qIndex];
+
+  gamePhase='revealed';
+
+  document.querySelectorAll('.opt-btn').forEach((b,bi)=>{
+
+    b.disabled=true;
+
+    if(bi===q.answer){
+      b.classList.add('correct');
+    }
+
+  });
+
+  showResult(false,q);
+
+  document.getElementById('info-area').innerHTML=
+    '<div class="info-msg"><strong>Time is up!</strong></div>';
+
+  renderLadder();
+}
+
+function buildQuestionSet() {
+
+  const result = [];
+
+  for (let level = 1; level <= 10; level++) {
+
+    const levelQuestions =
+      shuffle(
+        ALL_QUESTIONS.filter(q => q.level === level)
+      );
+
+    result.push(...levelQuestions.slice(0, 2));
+  }
+
+  const extraLevels = [2,4,6,8,10];
+
+  extraLevels.forEach(level => {
+
+    const remaining =
+      shuffle(
+        ALL_QUESTIONS.filter(
+          q =>
+            q.level === level &&
+            !result.includes(q)
+        )
+      );
+
+    if (remaining.length > 0) {
+    result.push(remaining[0]);
+}
+  });
+
+  return result.sort((a,b)=>a.level-b.level);
+}
+
+function startGame(){
+  teams=[];
+  for(let i=0;i<numTeams;i++){
+    const el = document.getElementById(`ti-${i}`);
+    const v = el ? el.value.trim() : '';
+    teams.push(v||`Team ${i+1}`);
+  }
+  scores=new Array(numTeams).fill(0);
+  lifelines=teams.map(()=>({fifty:false,ask:false,friend:false}));
+  questions = buildQuestionSet();
+  qIndex=0; currentTeam=0;
+  showScreen('game');
+  renderGame();
+}
+
+function showScreen(n){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+n).classList.add('active');
+}
+
+function renderGame(){
+  renderPills(); renderQuestion(); renderScoreboard(); renderLadder(); renderLifelines();
+  document.getElementById('result-area').innerHTML='';
+  document.getElementById('info-area').innerHTML='';
+  document.getElementById('vote-area').innerHTML='';
+  gamePhase='pick'; eliminated=[];
+  startTimer();
+}
+
+function renderPills(){
+  const c=document.getElementById('team-pills');
+  c.innerHTML='';
+  teams.forEach((t,i)=>{
+    const b=document.createElement('button');
+    b.className='t-pill'+(i===currentTeam?' active':'');
+    b.textContent=t;
+    b.onclick=null;
+    c.appendChild(b);
+  });
+}
+
+function renderQuestion(){
+
+  if(qIndex >= questions.length){
+    showFinal();
+    return;
+  }
+
+  document.getElementById('timer').textContent = '20';
+  document.getElementById('timer-box').classList.remove('timer-warning');
+
+  const q=questions[qIndex];
+
+  document.getElementById('q-num').textContent=
+    `Question ${qIndex+1} of ${questions.length}`;
+  document.getElementById('q-topic').textContent=q.topic;
+  document.getElementById('q-pts').textContent =
+`${q.level * 100} pts`;
+  document.getElementById('q-text').textContent=q.text;
+  const og=document.getElementById('opts-grid');
+  og.innerHTML='';
+  q.options.forEach((opt,i)=>{
+    const b=document.createElement('button');
+    b.className='opt-btn'; b.id=`opt-${i}`;
+    b.innerHTML=`<span class="opt-letter">${LETTERS[i]}</span>${opt}`;
+    b.onclick=()=>selectAnswer(i);
+    og.appendChild(b);
+  });
+}
+
+function selectAnswer(i){
+  stopTimer();
+  if(gamePhase!=='pick'||eliminated.includes(i)) return;
+  const q=questions[qIndex];
+  gamePhase='revealed';
+  document.querySelectorAll('.opt-btn').forEach((b,bi)=>{
+    b.disabled=true;
+    if(bi===q.answer) b.classList.add('correct');
+    else if(bi===i&&i!==q.answer) b.classList.add('wrong');
+  });
+  if(i===q.answer){
+    scores[currentTeam] += q.level * 100;
+}
+  document.getElementById('vote-area').innerHTML='';
+  document.getElementById('info-area').innerHTML='';
+  showResult(i===q.answer,q);
+  renderScoreboard(); renderLadder();
+}
+
+function showResult(correct,q){
+
+  const ra=document.getElementById('result-area');
+  const nextTeam=(currentTeam+1)%numTeams;
+  const isLast=qIndex>=questions.length-1;
+
+  const awardedPoints = q.level * 100;
+
+  ra.innerHTML=`<div class="result-box">
+    <div class="result-icon">${correct ? '✅' : '❌'}</div>
+    <div class="result-title">${correct ? 'Correct!' : 'Wrong answer!'}</div>
+
+    <div class="result-sub">
+      ${
+        correct
+          ? `+${awardedPoints} points for ${teams[currentTeam]}`
+          : `The correct answer was ${LETTERS[q.answer]}: ${q.options[q.answer]}`
+      }
+    </div>
+
+    ${
+      isLast
+        ? `<button class="res-btn" onclick="showFinal()">See final scores</button>`
+        : `<button class="res-btn" onclick="nextQ()">Next question → ${teams[nextTeam]}'s turn</button>`
+    }
+  </div>`;
+}
+
+function nextQ(){
+
+  qIndex++;
+
+  if(qIndex >= questions.length){
+    showFinal();
+    return;
+  }
+
+  currentTeam=(currentTeam+1)%numTeams;
+
+  renderGame();
+}
+
+function renderScoreboard(){
+  const sorted=teams.map((t,i)=>({t,s:scores[i],i})).sort((a,b)=>b.s-a.s);
+  document.getElementById('scoreboard').innerHTML=sorted.map(({t,s,i})=>
+    `<div class="score-row${i===currentTeam?' cur':''}"><span>${t}</span><span class="score-pts">${s.toLocaleString()}</span></div>`
+  ).join('');
+}
+
+function renderLadder(){
+  document.getElementById('ladder').innerHTML=[...LADDER].reverse().map((v,ri)=>{
+    const step=LADDER.length-1-ri;
+    const cls=step===qIndex?'lad-row cur':step<qIndex?'lad-row done':'lad-row';
+    return `<div class="${cls}">
+<span>Q${step+1}</span>
+<span>${v} pts</span>
+</div>`;
+  }).join('');
+}
+
+function renderLifelines(){
+  const ll=lifelines[currentTeam];
+  [['5050',ll.fifty],['ask',ll.ask],['friend',ll.friend]].forEach(([id,used])=>{
+    const el=document.getElementById('ll-'+id);
+    el.disabled=used; el.className='ll-btn'+(used?' used':'');
+  });
+}
+
+function use5050(){
+  if(gamePhase!=='pick') return;
+  lifelines[currentTeam].fifty=true; renderLifelines();
+  const q=questions[qIndex];
+  const wrong = shuffle(
+  [0,1,2,3].filter(
+    i => i !== q.answer && !eliminated.includes(i)
+  )
+).slice(0,2);
+  wrong.forEach(i=>{
+    eliminated.push(i);
+    const b=document.getElementById(`opt-${i}`);
+    if(b) b.classList.add('eliminated');
+  });
+  document.getElementById('info-area').innerHTML=`<div class="info-msg">50/50 used — two wrong answers removed.</div>`;
+}
+
+function useAskClass(){
+  if(gamePhase!=='pick') return;
+
+  lifelines[currentTeam].ask=true;
+  renderLifelines();
+
+  stopTimer();
+
+  document.getElementById('info-area').innerHTML=`
+    <div class="info-msg">
+      <strong>Ask the Class</strong><br>
+      Consult the other teams for advice.<br>
+      You have 30 seconds to discuss and collect opinions.
+    </div>
+  `;
+}
+
+function usePhoneFriend(){
+  if(gamePhase!=='pick') return;
+
+  lifelines[currentTeam].friend=true;
+  renderLifelines();
+
+  document.getElementById('info-area').innerHTML=`
+    <div class="info-msg">
+      <strong>Phone the Teacher</strong><br>
+      Ask the teacher for a clue or guidance.
+    </div>
+  `;
+}
+
+function showFinal(){
+  stopTimer();
+  showScreen('final');
+  const sorted=teams.map((t,i)=>({t,s:scores[i]})).sort((a,b)=>b.s-a.s);
+  const medals=['🥇','🥈','🥉'];
+  const cls=['p1','p2','p3'];
+  document.getElementById('final-podium').innerHTML=sorted.map((item,i)=>
+    `<div class="podium-row ${cls[i]||'px'}"><span>${medals[i]||'  '} ${item.t}</span><span>${item.s.toLocaleString()} pts</span></div>`
+  ).join('');
+}
+
+function restartGame(){
+
+  stopTimer();
+
+  qIndex = 0;
+  currentTeam = 0;
+  questions = [];
+  scores = [];
+  lifelines = [];
+  eliminated = [];
+
+  showScreen('setup');
+  renderTeamInputs();
+}
+
+renderTeamInputs();
+</script>
+</body>
+</html>
