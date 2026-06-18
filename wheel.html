@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Classroom Wheel of Names</title>
+<script>
+window.addEventListener('error', function(e) {
+  var box = document.createElement('div');
+  box.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#b91c1c;color:white;padding:14px;font-family:monospace;font-size:14px;z-index:999999;white-space:pre-wrap;';
+  box.textContent = 'JS ERROR: ' + e.message + '\n  at line ' + e.lineno + ', col ' + e.colno + '\n  file: ' + e.filename;
+  document.body ? document.body.prepend(box) : document.addEventListener('DOMContentLoaded', function(){ document.body.prepend(box); });
+});
+</script>
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  -webkit-tap-highlight-color:transparent;
+}
+
+body{
+  font-family:"Avenir Next",Avenir,"Segoe UI Variable","Segoe UI",Calibri,sans-serif;
+  background:#0f172a;
+  color:white;
+  min-height:100vh;
+  padding:20px;
+}
+
+h1{
+  text-align:center;
+  color:#ffd700;
+  margin-bottom:20px;
+}
+
+.container{
+  display:grid;
+  grid-template-columns:320px 1fr;
+  gap:20px;
+  max-width:1400px;
+  margin:auto;
+}
+
+@media(max-width:900px){
+  .container{
+    grid-template-columns:1fr;
+  }
+  .canvas-wrap{
+    width:100%;
+  }
+}
+
+.panel{
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:15px;
+  padding:20px;
+}
+
+select{
+  width:100%;
+  padding:10px;
+  margin-bottom:15px;
+  border-radius:10px;
+  font-size:16px;
+  background:#111827;
+  color:white;
+  border:1px solid #333;
+  /* Prevent iOS zoom on focus */
+  font-size:16px;
+}
+
+textarea{
+  width:100%;
+  height:260px;
+  resize:none;
+  background:#111827;
+  color:white;
+  border:1px solid #333;
+  border-radius:10px;
+  padding:10px;
+  font-size:15px;
+  /* Prevent iOS zoom on focus */
+  font-size:16px;
+}
+
+button{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:10px;
+  margin-top:10px;
+  cursor:pointer;
+  font-weight:bold;
+  font-size:16px;
+  /* Ensure tappable on iOS */
+  -webkit-appearance:none;
+  touch-action:manipulation;
+}
+
+.spin-btn{
+  background:#ffd700;
+  color:black;
+}
+.spin-btn:active{ opacity:0.8; }
+
+.reset-btn{
+  background:#ef4444;
+  color:white;
+}
+.reset-btn:active{ opacity:0.8; }
+
+.remove-btn{
+  background:#10b981;
+  color:white;
+}
+.remove-btn:active{ opacity:0.8; }
+
+.canvas-wrap{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  width:100%;
+  max-width:700px;
+}
+
+.wheel-square{
+  width:100%;
+  max-width:700px;
+  height:0;
+  padding-top:100%;
+  position:relative;
+}
+
+.pointer{
+  width:0;
+  height:0;
+  border-left:25px solid transparent;
+  border-right:25px solid transparent;
+  border-top:45px solid #ffd700;
+  margin-bottom:-5px;
+  z-index:2;
+}
+
+#wheel{
+  background:white;
+  border-radius:50%;
+  box-shadow:0 0 30px rgba(0,0,0,.4);
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  display:block;
+  /* Prevent iOS callout on long-press */
+  -webkit-user-select:none;
+  user-select:none;
+}
+
+.winner{
+  margin-top:20px;
+  font-size:28px;
+  font-weight:bold;
+  color:#ffd700;
+  text-align:center;
+  min-height:40px;
+}
+
+.history{
+  margin-top:15px;
+  max-height:200px;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+
+.history-item{
+  padding:6px;
+  border-bottom:1px solid rgba(255,255,255,.1);
+}
+
+/* ── Winner Modal ── */
+.winner-modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.85);
+  z-index:9999;
+  justify-content:center;
+  align-items:center;
+  /* iOS safe area */
+  padding:env(safe-area-inset-top) env(safe-area-inset-right)
+          env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+.winner-card{
+  background:#111827;
+  border:3px solid #ffd700;
+  border-radius:20px;
+  padding:40px;
+  text-align:center;
+  min-width:300px;
+  max-width:90vw;
+  box-shadow:0 0 40px rgba(255,215,0,.4);
+}
+
+.winner-title{
+  font-size:28px;
+  color:#ffd700;
+  margin-bottom:20px;
+  font-weight:bold;
+}
+
+.winner-name-big{
+  font-size:clamp(36px,8vw,72px);
+  font-weight:bold;
+  color:white;
+  margin-bottom:30px;
+  word-break:break-word;
+}
+
+.close-winner-btn{
+  background:#ffd700;
+  color:black;
+  border:none;
+  border-radius:10px;
+  padding:14px 40px;
+  font-size:18px;
+  font-weight:bold;
+  cursor:pointer;
+  -webkit-appearance:none;
+  touch-action:manipulation;
+}
+.close-winner-btn:active{ opacity:0.8; }
+</style>
+</head>
+<body>
+
+<!-- Modal MUST be in the DOM before the script runs -->
+<div id="winnerModal" class="winner-modal">
+  <div class="winner-card">
+    <div class="winner-title">🎉 WINNER 🎉</div>
+    <div id="winnerNameBig" class="winner-name-big"></div>
+    <button onclick="closeWinnerModal()" class="close-winner-btn">Continue</button>
+  </div>
+</div>
+
+<h1>🎡 Classroom Wheel of Names</h1>
+
+<div class="container">
+
+  <div class="panel">
+
+    <h3>Select Class</h3>
+    <select id="classSelect" onchange="loadClass(this.value)">
+      <option value="M2-1">M2/1</option>
+      <option value="M2-2">M2/2</option>
+      <option value="M2-3">M2/3</option>
+      <option value="M2-4">M2/4</option>
+      <option value="M2-5">M2/5</option>
+      <option value="M5-1">M5/1</option>
+      <option value="M5-2">M5/2</option>
+      <option value="M5-3">M5/3</option>
+      <option value="M5-4">M5/4</option>
+    </select>
+
+    <h3>Names (one per line)</h3>
+    <textarea id="namesInput"></textarea>
+
+    <button class="spin-btn" onclick="spinWheel()">🎯 Spin Wheel</button>
+    <button class="remove-btn" onclick="removeWinner()">❌ Remove Winner From Wheel</button>
+    <button class="reset-btn" onclick="loadClass(document.getElementById('classSelect').value)">🔄 Reload Names</button>
+
+    <div style="margin-top:20px;">
+      <h3>Previous Winners</h3>
+      <div id="history" class="history"></div>
+    </div>
+
+  </div>
+
+  <div class="canvas-wrap">
+    <div class="pointer"></div>
+    <div class="wheel-square">
+      <canvas id="wheel" width="700" height="700"></canvas>
+    </div>
+    <div id="winnerDisplay" class="winner"></div>
+  </div>
+
+
+</div>
+
+<script>
+// ─── Data ────────────────────────────────────────────────
+const classes = {
+  "M2-1": [
+    "1. Eak","2. Poom","3. Janine","4. Ryu","5. Money",
+    "6. Amme","7. Foto","8. Fair","9. Kaomark","10. Thiwa",
+    "11. Tigger","12. Taro","13. Kate","14. Minmin","15. Titan",
+    "16. Boonboon","17. New","18. Mook","19. PK","20. Bling Bling",
+    "21. Angie","22. Keeth","23. Shiryu","24. AJ","25. Payne",
+    "26. Place","27. Monday","28. Mimm","29. Arctic","30. Ralphie",
+    "31. Shogun","32. Porsh","33. Din"
+  ],
+  "M2-2": [
+    "Nont","Ming Kun","Elle","Guitar","Get","Phu","L","Lava","Boss","Flynn",
+    "Neon","Zome","Taiji","Puth","Engfah","Java","Sila","Chaomai","Lisa","Pippa",
+    "Prin","Ritcha","Poom","Holy","Baimon","Fleur","Nami","Tochi","Pumjai","Trophy",
+    "Pie-R","Sofia","Alice"
+  ],
+  "M2-3": [
+    "2. Poon","3. Plammy","4. Japan","5. Thanwa","6. Wawa","7. Tonklan",
+    "8. Baithong","9. Termten","10. Praidao","11. Suppakorn","12. Sanan",
+    "13. Phenphat","14. E-JI","15. Copter","16. Noppawit","17. Yorying",
+    "18. Moopee","19. Mali","20. Kriss","21. Tonpho","22. Poom","23. Korn",
+    "24. Mimi","25. Glasgow","26. Bam","27. Endo","28. Khaopan","29. Nine",
+    "30. Katie","31. Pang Hom","32. Awa","33. Ter"
+  ],
+  "M2-4": [
+    "1. Namo","2. Ohm","3. Janisa","4. Tonkla","5. Nammont","6. Dollar",
+    "7. Dve","8. Koi","9. Jayda","10. Copter","11. Jason","12. Frappe",
+    "13. Prim","14. View","15. Potey","16. Yayee","17. Ryu","18. Gatchan",
+    "19. Best","20. Ozone","21. IQ","22. Titan","23. Pun","24. Khowjao",
+    "25. Zoe","26. Anan","27. Puifai","28. Sean","29. Wawa","30. Pooh",
+    "31. Koon","32. Pipooh","33. Jomkwan"
+  ],
+  "M2-5": [
+    "1. Thames","2. Aston","3. Nat","4. Gwen","5. Tintin","6. Moak",
+    "7. Pete","8. Thutt","9. Ping Ping","10. Praifah","11. Nice","12. Min",
+    "13. August","14. Khunnie","15. Copter","16. Lina","17. JJ","18. Phup",
+    "19. Kwankao","20. Midi","21. Picha","22. Monfai","23. Gena","24. Hoper",
+    "25. Jnar","26. Look-Prai","27. Gale","28. Pahda","29. Jirat","30. Win",
+    "31. Vasi","32. Pun","33. Win"
+  ],
+  "M5-1": [
+    "1. -","2. Chai","3. Yuri","4. AI","5. Winnie","6. Gun","7. Namo",
+    "8. Meepooh","9. Pran","10. Tigger","11. Brami","12. Valen","13. Rak",
+    "14. Boon","16. Minglee","17. Phupha","18. Ploy","19. Soup","20. August",
+    "21. Mydear","22. Nana","23. Anfield","24. Praew","25. Kingkeaw",
+    "26. Baiboon","27. Pat"
+  ],
+  "M5-2": [
+    "1. Ohm","2. Pup","3. Wut","4. Frank","5. Tan","6. Neo","7. Frank",
+    "8. Hill","9. Alpha","10. Phu","11. Ai","12. Nickolai","13. Karn",
+    "14. Aiji","15. Tonklao","16. Phu","17. Haji","18. Maru","19. Ninety",
+    "20. Tonnam","21. Ohmmé","22. Pao","23. Nael"
+  ],
+  "M5-3": [
+    "1. Anna","2. Loma","3. Ida","4. Minny","5. Gam","6. Pao","7. Captain",
+    "8. Sand","9. Tonliew","10. Junjao","11. Sean","12. Zhong","13. Kaofang",
+    "14. Gna","15. Pasta","16. Pim","17. Minya","18. Tiger","19. Acare",
+    "20. Toro","21. Kanomjean","22. Aom","23. Brazil","24. Teya","25. Din",
+    "26. Titan","27. Pear","28. Aiya","29. Austin","30. Front","31. Prikthai",
+    "32. Lhinlhin","33. PJ","34. UK","35. Jaja","36. Mobile","37. Phupha"
+  ],
+  "M5-4": [
+    "1. Payu","2. Harji","3. Wish","4. Prae","6. Faith","7. Bouquet",
+    "8. Latte","9. Yada","10. Bowton","11. Ploy","12. Por D","13. Term",
+    "14. IKK","15. OK","16. Kin","17. Cake","18. Tara","19. Kaopaan",
+    "20. Love","21. Indy","22. Tanya","23. Ryu","24. Aoem","25. Mei Mei",
+    "26. Yoshi","27. Tiara","28. Chef","29. IKQ","30. Chote","31. Clear",
+    "32. Chang","33. BB","34. Copter"
+  ]
+};
+
+const colors = [
+  "#ef4444","#3b82f6","#10b981","#f59e0b","#8b5cf6",
+  "#ec4899","#14b8a6","#f97316","#6366f1","#84cc16"
+];
+
+// ─── State ───────────────────────────────────────────────
+const canvas  = document.getElementById("wheel");
+const ctx     = canvas.getContext("2d");
+
+let names           = [];
+let winnerName      = "";
+let currentRotation = 0;
+let spinning        = false;
+
+// ─── Load class ──────────────────────────────────────────
+function loadClass(className) {
+  if (!classes[className]) return;
+  names = [...classes[className]];
+  document.getElementById("namesInput").value = names.join("\n");
+  winnerName = "";
+  document.getElementById("winnerDisplay").textContent = "";
+  drawWheel();
+}
+
+// ─── Draw ────────────────────────────────────────────────
+function drawWheel(rotation) {
+  if (rotation === undefined) rotation = currentRotation;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (names.length === 0) {
+    ctx.fillStyle = "white";
+    ctx.font = "30px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("No Names", 350, 350);
+    return;
+  }
+
+  const cx = 350, cy = 350, r = 320;
+  const arc = (Math.PI * 2) / names.length;
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(rotation);
+
+  for (let i = 0; i < names.length; i++) {
+    const start = i * arc;
+    const end   = start + arc;
+
+    // Slice
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, r, start, end);
+    ctx.closePath();
+    ctx.fillStyle = colors[i % colors.length];
+    ctx.fill();
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Label — strip leading "N. " for display if present
+    ctx.save();
+    ctx.rotate(start + arc / 2);
+    ctx.fillStyle = "white";
+    ctx.font = "bold 18px sans-serif";
+    ctx.textAlign = "right";
+    const label = names[i].replace(/^\d+\.\s*/, "");
+    ctx.fillText(label, r - 20, 8);
+    ctx.restore();
+  }
+
+  ctx.restore();
+}
+
+// ─── Spin ────────────────────────────────────────────────
+function spinWheel() {
+  if (spinning) return;
+  if (names.length < 2) {
+    alert("Please enter at least 2 names.");
+    return;
+  }
+
+  spinning = true;
+
+  const extraRotation = (Math.random() * 360 + 1800) * (Math.PI / 180);
+  const startRotation = currentRotation;
+  const endRotation   = startRotation + extraRotation;
+  const duration      = 5000;
+  const startTime     = performance.now();
+
+  function animate(now) {
+    const elapsed  = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const ease     = 1 - Math.pow(1 - progress, 4);
+
+    currentRotation = startRotation + (endRotation - startRotation) * ease;
+    drawWheel(currentRotation);
+
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      spinning = false;
+      determineWinner();
+    }
+  }
+
+  requestAnimationFrame(animate);
+}
+
+// ─── Winner ──────────────────────────────────────────────
+function determineWinner() {
+  const arc        = (Math.PI * 2) / names.length;
+  // Pointer is at the top (270° = 3π/2). Work out which slice is there.
+  const normalized = ((Math.PI * 1.5) - (currentRotation % (Math.PI * 2)) + (Math.PI * 2)) % (Math.PI * 2);
+  const index      = Math.floor(normalized / arc) % names.length;
+
+  winnerName = names[index];
+
+  document.getElementById("winnerDisplay").textContent = "🏆 Winner: " + winnerName;
+  addToHistory(winnerName);
+  showWinnerModal(winnerName);
+}
+
+function addToHistory(name) {
+  const div = document.createElement("div");
+  div.className = "history-item";
+  div.textContent = name;
+  document.getElementById("history").prepend(div);
+}
+
+// ─── Modal ───────────────────────────────────────────────
+function showWinnerModal(name) {
+  const modal = document.getElementById("winnerModal");
+  const label = document.getElementById("winnerNameBig");
+  if (!modal || !label) return;           // safety guard
+  label.textContent = name;
+  modal.style.display = "flex";
+}
+
+function closeWinnerModal() {
+  const modal = document.getElementById("winnerModal");
+  if (modal) modal.style.display = "none";
+}
+
+// ─── Remove winner ───────────────────────────────────────
+function removeWinner() {
+  if (!winnerName) return;
+  names = names.filter(n => n !== winnerName);
+  winnerName = "";
+  document.getElementById("winnerDisplay").textContent = "";
+  drawWheel();
+}
+
+// ─── Init ─────────────────────────────────────────────────
+// Wait for DOM to be fully ready before first draw
+document.addEventListener("DOMContentLoaded", function() {
+  const modalEl = document.getElementById("winnerModal");
+  if (modalEl) {
+    modalEl.addEventListener("click", function(e) {
+      if (e.target === this) closeWinnerModal();
+    });
+  }
+  loadClass("M2-1");
+});
+
+</script>
+
+</body>
+</html>
