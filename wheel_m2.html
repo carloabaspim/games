@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wheel of Fortune – Unit 2: Law & Order</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  background:#0d0d1a;color:#f1f5f9;
+  font-family:"Avenir Next",Avenir,"Segoe UI",Calibri,sans-serif;
+  min-height:100vh;overflow-x:hidden;
+}
+
+/* SETUP */
+#setup-screen{max-width:660px;margin:0 auto;padding:50px 24px;text-align:center;}
+.game-logo{font-size:52px;font-weight:800;letter-spacing:4px;text-transform:uppercase;color:#ffd700;margin-bottom:4px;}
+.game-sub{font-size:16px;color:#64748b;letter-spacing:2px;text-transform:uppercase;margin-bottom:44px;}
+.team-setup-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:32px;}
+.team-field{background:#161628;border:1px solid #1e2040;border-radius:12px;padding:16px;text-align:left;}
+.team-field label{display:block;font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+.team-field label span{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle;}
+.team-field input{width:100%;background:#0d0d1a;border:1px solid #2a2a4a;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:16px;outline:none;transition:border-color 0.2s;}
+.team-field input:focus{border-color:#ffd700;}
+.start-btn{background:#ffd700;color:#0d0d1a;border:none;border-radius:12px;padding:16px 56px;font-size:20px;font-weight:800;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;box-shadow:0 4px 24px rgba(255,215,0,0.25);}
+.start-btn:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(255,215,0,0.35);}
+.start-btn:active{transform:scale(0.97);}
+
+/* GAME */
+#game-screen{display:none;padding:16px 20px;max-width:1200px;margin:0 auto;}
+#top-bar{display:flex;align-items:stretch;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+
+.score-card{flex:1;min-width:120px;background:#161628;border:2px solid transparent;border-radius:12px;padding:5px 16px;text-align:center;transition:border-color 0.3s,background 0.3s;}
+
+.score-card.active-team{border-color:#ffd700;background:#1a1a30;}
+.sc-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle;}
+
+.sc-name{font-size:20px;color:#94a3b8;margin-bottom:4px;}
+
+.sc-pts{font-size:26px;font-weight:800;color:#ffd700;}
+
+.round-badge{font-size:24px;color:#475569;text-transform:uppercase;letter-spacing:1px;text-align:center;margin-bottom:12px;}
+
+#game-body{display:grid;grid-template-columns:1fr 400px;gap:16px;align-items:start;}
+
+/* Puzzle panel */
+#puzzle-panel{background:#161628;border-radius:16px;padding:24px;border:1px solid #1e2040;}
+
+#category-tag{
+  text-align:center;
+  font-size:14px;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  color:#64748b;margin-bottom:20px;
+  padding:6px 14px;
+  border:1px solid #1e2040;
+  border-radius:20px;
+  display:inline-block;
+  margin-left:50%;
+  transform:translateX(-50%);
+}
+
+#letter-board{display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:center;min-height:100px;align-items:center;margin-bottom:24px;}
+.word-group{display:flex;gap:6px;flex-shrink:0;}
+.tile{width:52px;height:64px;background:#1a1a35;border:2px solid #3a3a6a;border-bottom:4px solid #4a4a8a;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;text-transform:uppercase;border-radius:6px 6px 0 0;transition:background 0.3s,border-color 0.3s,color 0.3s;color:transparent;}
+.tile.gap{background:transparent;border:none;width:20px;}
+.tile.lit{background:#0d2a5e;border-color:#ffd700;border-bottom-color:#ffd700;color:#ffffff;font-size:28px;box-shadow:0 0 12px rgba(255,215,0,0.35);animation:popin 0.3s cubic-bezier(0.34,1.56,0.64,1);}
+@keyframes popin{0%{transform:scale(0.6);opacity:0;}100%{transform:scale(1);opacity:1;}}
+
+/* Alphabet — split into consonants and vowels */
+
+#alpha-section{margin-top:4px;}
+
+#consonant-label,#vowel-label{
+  font-size:14px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:#475569;
+  margin-bottom:6px;
+  margin-top:14px;
+}
+
+#consonant-row,#vowel-row{display:flex;flex-wrap:wrap;gap:5px;}
+
+.ab{
+  width:44px;height:44px;background:#1e2040;border:1px solid #2a2a4a;border-radius:8px;
+  color:#e2e8f0;font-size:18px;font-weight:700;cursor:pointer;
+  transition:background 0.15s,transform 0.1s;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+}
+.ab:hover:not([disabled]):not(.used){background:#2a2a5a;transform:scale(1.08);}
+.ab[disabled]{cursor:not-allowed;}
+.ab.used{
+  background:#0d0d1a;
+  color:#334155;
+  border-color:#1e2040;
+  cursor:default;
+}
+/* strikethrough for used letters */
+.ab.used::after{
+  content:"";
+  position:absolute;
+  left:6px;right:6px;top:50%;
+  height:2px;
+  background:#334155;
+  transform:rotate(-15deg);
+  border-radius:2px;
+}
+.ab.hit{background:#14532d;border-color:#16a34a;color:#86efac;}
+.ab.hit::after{background:#16a34a;}
+.ab.miss{background:#450a0a;border-color:#991b1b;color:#fca5a5;}
+.ab.miss::after{background:#991b1b;}
+
+/* Vowel buy button */
+
+#buy-vowel-row{margin-top:8px;text-align:center;}
+
+#buy-vowel-btn{
+  background:#1e3a5f;
+  color:#93c5fd;
+  border:1px solid #1d4ed8;
+  border-radius:10px;
+  padding:9px 20px;
+  font-size:16px;
+  font-weight:700;
+  cursor:pointer;
+  letter-spacing:0.5px;
+  transition:opacity 0.15s,transform 0.1s;
+}
+
+#buy-vowel-btn:hover:not([disabled]){
+  opacity:0.85;
+  transform:scale(1.02);
+}
+
+#buy-vowel-btn[disabled]{
+  opacity:0.35;
+  cursor:not-allowed;
+}
+
+#buy-vowel-cost{
+  font-size:14px;
+  color:#475569;
+  margin-top:4px;
+}
+
+/* Right panel */
+#right-panel{display:flex;flex-direction:column;gap:14px;align-self:start;}
+
+#wheel-panel{background:#161628;border-radius:16px;padding:20px 20px 4px 20px;border:1px solid #1e2040;text-align:center;}
+
+#wheel-wrap{position:relative;width:340px;height:350px;margin:0 auto 14px;}
+
+#wheel-pointer{
+  position:absolute;top:-14px;left:50%;transform:translateX(-50%);
+  width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;
+  border-top:24px solid #ffd700;z-index:10;
+  filter:drop-shadow(0 2px 6px rgba(255,215,0,0.6));
+}
+canvas#wheel{width:340px;height:340px;display:block;border-radius:50%;}
+
+#spin-btn{
+  width:100%;
+  background:#ffd700;
+  color:#0d0d1a;
+  border:none;
+  border-radius:10px;
+  padding:16px;
+  font-size:22px;
+  font-weight:800;
+  letter-spacing:1px;
+  cursor:pointer;
+  transition:opacity 0.15s,transform 0.1s;
+}
+
+#spin-btn:hover:not([disabled]){opacity:0.9;transform:scale(1.02);}
+
+#spin-btn[disabled]{background:#1e2040;color:#334155;cursor:not-allowed;}
+
+#spin-result{
+  margin-top:5px;
+  font-size:24px;
+  font-weight:800;
+  color:#ffd700;
+  min-height:20;
+  letter-spacing:1px;
+  margin-top:10px;
+}
+
+#timer-bar-wrap{width:100%;height:12px;background:#1e2040;border-radius:6px;margin-top:10px;overflow:hidden;display:none;}
+#timer-bar{height:100%;width:100%;background:#ffd700;border-radius:6px;transition:width 1s linear,background 1s linear;}
+#timer-label{text-align:center;font-size:14px;color:#64748b;margin-top:4px;display:none;}
+
+#ctrl-panel{background:#161628;border-radius:16px;padding:16px;border:1px solid #1e2040;}
+#turn-info{text-align:center;margin-bottom:12px;}
+#turn-name{font-size:18px;font-weight:800;margin-bottom:2px;}
+
+#pot-line{
+  font-size:16px;
+  color:#64748b;
+}
+
+#pot-line span{
+  color:#ffd700;
+  font-weight:700;
+}
+
+.btn-row{display:flex;gap:8px;margin-bottom:8px;}
+.gb{flex:1;padding:10px 6px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.15s,transform 0.1s;letter-spacing:0.5px;}
+.gb:hover{opacity:0.85;transform:scale(1.02);}
+.gb:active{transform:scale(0.97);}
+.g-award{background:#14532d;color:#86efac;}
+.g-nextturn{background:#1e3a5f;color:#93c5fd;}
+.g-solve{background:#3b0764;color:#d8b4fe;}
+.g-nextpuzzle{background:#1e2040;color:#94a3b8;}
+
+/* Solve modal */
+#solve-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:100;align-items:center;justify-content:center;}
+#solve-modal.open{display:flex;}
+#solve-box{background:#161628;border:1px solid #2a2a4a;border-radius:20px;padding:36px;max-width:480px;width:90%;text-align:center;}
+#solve-box h3{color:#ffd700;font-size:22px;margin-bottom:18px;letter-spacing:1px;}
+#solve-box input{width:100%;background:#0d0d1a;border:1px solid #2a2a4a;border-radius:10px;padding:14px;color:#f1f5f9;font-size:20px;text-align:center;text-transform:uppercase;letter-spacing:3px;outline:none;margin-bottom:16px;}
+#solve-box input:focus{border-color:#ffd700;}
+.solve-row{display:flex;gap:10px;}
+.solve-row button{flex:1;padding:13px;border:none;border-radius:10px;font-size:16px;font-weight:800;cursor:pointer;}
+#sb-confirm{background:#ffd700;color:#0d0d1a;}
+#sb-cancel{background:#1e2040;color:#94a3b8;}
+
+/* Toast */
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:#ffd700;color:#0d0d1a;padding:12px 28px;border-radius:40px;font-size:17px;font-weight:800;z-index:200;pointer-events:none;transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1),opacity 0.35s;opacity:0;white-space:nowrap;}
+#toast.up{transform:translateX(-50%) translateY(0);opacity:1;}
+#toast.bad{background:#dc2626;color:#fff;}
+
+/* Winner */
+#winner-screen{display:none;max-width:580px;margin:0 auto;padding:60px 24px;text-align:center;}
+#winner-screen .game-logo{margin-bottom:8px;}
+#winner-screen p{color:#64748b;margin-bottom:36px;font-size:16px;}
+.podium-entry{display:flex;align-items:center;background:#161628;border:1px solid #1e2040;border-radius:12px;padding:16px 24px;margin-bottom:10px;font-size:20px;}
+.podium-entry.first{border-color:#ffd700;background:#1a1a28;}
+.pod-rank{width:44px;font-size:26px;}
+.pod-dot{width:12px;height:12px;border-radius:50%;margin-right:12px;flex-shrink:0;}
+.pod-name{flex:1;text-align:left;font-weight:700;}
+.pod-score{color:#ffd700;font-weight:800;font-size:22px;}
+.play-again{margin-top:28px;background:#ffd700;color:#0d0d1a;border:none;border-radius:12px;padding:16px 48px;font-size:18px;font-weight:800;cursor:pointer;letter-spacing:1px;}
+</style>
+</head>
+<body>
+
+<!-- SETUP -->
+<div id="setup-screen">
+  <div class="game-logo">Wheel of Fortune</div>
+  <div class="game-sub">Unit 2 · Law & Order</div>
+  <div class="team-setup-grid">
+    <div class="team-field"><label><span style="background:#f87171;"></span>Team 1</label><input id="t0" value="Team 1"></div>
+    <div class="team-field"><label><span style="background:#60a5fa;"></span>Team 2</label><input id="t1" value="Team 2"></div>
+    <div class="team-field"><label><span style="background:#4ade80;"></span>Team 3</label><input id="t2" value="Team 3"></div>
+    <div class="team-field"><label><span style="background:#facc15;"></span>Team 4</label><input id="t3" value="Team 4"></div>
+  </div>
+  <button class="start-btn" onclick="startGame()">Start Game</button>
+</div>
+
+<!-- GAME -->
+<div id="game-screen">
+  <div class="round-badge" id="round-badge">Round 1</div>
+  <div id="top-bar">
+    <div class="score-card" id="sc0"><div class="sc-name"><span class="sc-dot" style="background:#f87171;"></span><span id="sn0">Team 1</span></div><div class="sc-pts" id="sp0">0</div></div>
+    <div class="score-card" id="sc1"><div class="sc-name"><span class="sc-dot" style="background:#60a5fa;"></span><span id="sn1">Team 2</span></div><div class="sc-pts" id="sp1">0</div></div>
+    <div class="score-card" id="sc2"><div class="sc-name"><span class="sc-dot" style="background:#4ade80;"></span><span id="sn2">Team 3</span></div><div class="sc-pts" id="sp2">0</div></div>
+    <div class="score-card" id="sc3"><div class="sc-name"><span class="sc-dot" style="background:#facc15;"></span><span id="sn3">Team 4</span></div><div class="sc-pts" id="sp3">0</div></div>
+  </div>
+
+  <div id="game-body">
+    <div id="puzzle-panel">
+      <div id="category-tag">Category</div>
+      <div id="letter-board"></div>
+      <div id="alpha-section">
+        <div id="consonant-label">Consonants</div>
+        <div id="consonant-row"></div>
+        <div id="vowel-label">Vowels</div>
+        <div id="vowel-row"></div>
+        <div id="buy-vowel-row">
+          <button id="buy-vowel-btn" onclick="buyVowelMode()" disabled>Buy a Vowel</button>
+          <div id="buy-vowel-cost">Cost: ฿2,500 · Spin the wheel first to unlock consonants</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="right-panel">
+      <div id="wheel-panel">
+        <div id="wheel-wrap">
+          <div id="wheel-pointer"></div>
+          <canvas id="wheel" width="420" height="420"></canvas>
+        </div>
+        <button id="spin-btn" onclick="spinWheel()">SPIN</button>
+        <div id="spin-result"></div>
+        <div id="timer-bar-wrap"><div id="timer-bar"></div></div>
+        <div id="timer-label">⏱ <span id="timer-count">20</span>s</div>
+      </div>
+      <div id="ctrl-panel">
+        <div id="turn-info">
+          <div id="turn-name">—</div>
+          <div id="pot-line">Round pot: <span id="pot-val">0</span></div>
+        </div>
+        <div class="btn-row">
+          <button class="gb g-nextturn" onclick="nextTurn()">Next Turn</button>
+        </div>
+        <div class="btn-row">
+          <button class="gb g-solve"      onclick="openSolve()">Solve Puzzle</button>
+          <button class="gb g-nextpuzzle" onclick="nextPuzzle()">Next Puzzle →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Solve modal -->
+<div id="solve-modal">
+  <div id="solve-box">
+    <h3>Solve the Puzzle</h3>
+    <input id="solve-input" placeholder="TYPE YOUR ANSWER" autocomplete="off">
+    <div class="solve-row">
+      <button id="sb-confirm" onclick="checkSolve()">Submit</button>
+      <button id="sb-cancel"  onclick="closeSolve()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- WINNER -->
+<div id="winner-screen">
+  <div class="game-logo">Game Over!</div>
+  <p>Final scores</p>
+  <div id="winner-list"></div>
+  <button class="play-again" onclick="location.reload()">Play Again</button>
+</div>
+
+<script>
+const TEAM_COLORS=["#f87171","#60a5fa","#4ade80","#facc15"];
+const VOWELS=new Set(["A","E","I","O","U"]);
+const VOWEL_COST=1000;
+
+/* Wheel segments per round. Top value changes each round. */
+function getSegments(round){
+  const top = round<=1 ? 25000 : round<=3 ? 35000 : 50000;
+return [
+  {label:"500",       val:500,  col:"#F4A261"},
+  {label:"600",       val:600,  col:"#FFD700"},
+  {label:"700",       val:700,  col:"#00C853"},
+  {label:"800",       val:800,  col:"#FF80AB"},
+  {label:"850",       val:850,  col:"#40C4FF"},
+  {label:"500",       val:500,  col:"#06FFA5"},
+  {label:"650",       val:650,  col:"#3A86FF"},
+  {label:"700",       val:700,  col:"#9D4EDD"},
+  {label:"900",       val:900,  col:"#FF924C"},
+  {label:"LOSE TURN", val:-1,   col:"#FF595E"},
+  {label:"500",       val:500,  col:"#CCF4D1"},
+  {label:"800",       val:800,  col:"#E9C46A"},
+
+  // Opposite side of wheel
+
+  {label:"500",       val:500,  col:"#F4A261"},
+  {label:"600",       val:600,  col:"#FFD700"},
+  {label:"700",       val:700,  col:"#00C853"},
+  {label:"800",       val:800,  col:"#FF80AB"},
+  {label:"850",       val:850,  col:"#40C4FF"},
+  {label:"500",       val:500,  col:"#06FFA5"},
+  {label:"650",       val:650,  col:"#3A86FF"},
+  {label:"700",       val:700,  col:"#9D4EDD"},
+  {label:"900",       val:900,  col:"#FF924C"},
+  {label:"700",       val:700,  col:"#FFFFFF"}, // opposite BANKRUPT
+  {label:"500",       val:500,  col:"#CCF4D1"},
+  {label:"BANKRUPT",  val:-2,   col:"#000000"}
+];
+}
+
+const PUZZLES=[
+
+  // CRIMES
+  {phrase:"BURGLARY", category:"Crime"},
+  {phrase:"VANDALISM", category:"Crime"},
+  {phrase:"CYBERCRIME", category:"Crime"},
+  {phrase:"ROBBERY", category:"Crime"},
+  {phrase:"SHOPLIFTING", category:"Crime"},
+  {phrase:"KIDNAPPING", category:"Crime"},
+  {phrase:"SMUGGLING", category:"Crime"},
+  {phrase:"ARSON", category:"Crime"},
+  {phrase:"MURDER", category:"Crime"},
+
+  // CRIMINALS
+  {phrase:"BURGLAR", category:"Criminal"},
+  {phrase:"HACKER", category:"Criminal"},
+  {phrase:"SHOPLIFTER", category:"Criminal"},
+  {phrase:"KIDNAPPER", category:"Criminal"},
+  {phrase:"SMUGGLER", category:"Criminal"},
+  {phrase:"MUGGER", category:"Criminal"},
+  {phrase:"ARSONIST", category:"Criminal"},
+  {phrase:"ROBBER", category:"Criminal"},
+
+  // INVESTIGATION VOCABULARY
+  {phrase:"SEARCH FOR EVIDENCE", category:"Investigation"},
+  {phrase:"ANALYSE EVIDENCE", category:"Investigation"},
+  {phrase:"INVESTIGATE A CASE", category:"Investigation"},
+  {phrase:"QUESTION A WITNESS", category:"Investigation"},
+
+  // PEOPLE
+  {phrase:"DETECTIVE", category:"People"},
+  {phrase:"WITNESS", category:"People"},
+  {phrase:"SUSPECT", category:"People"},
+  {phrase:"VICTIM", category:"People"},
+
+  // MIXED CHALLENGE
+  {phrase:"POLICE INVESTIGATION", category:"Law And Order"},
+  {phrase:"CRIME SCENE", category:"Law And Order"},
+  {phrase:"POLICE STATION", category:"Law And Order"},
+  {phrase:"STRONG PASSWORD", category:"Cybercrime"},
+  {phrase:"ONLINE SAFETY", category:"Cybercrime"},
+  {phrase:"COLLECT EVIDENCE", category:"Law And Order"}
+];
+
+/* State */
+
+/* ── Timer ── */
+let timerInterval=null, timerSeconds=0;
+function startTimer(){
+  stopTimer();
+  timerSeconds=20;
+  const bar=document.getElementById('timer-bar');
+  const label=document.getElementById('timer-count');
+  const wrap=document.getElementById('timer-bar-wrap');
+  const lbl=document.getElementById('timer-label');
+  wrap.style.display='block'; lbl.style.display='block';
+  bar.style.transition='none';
+  bar.style.width='100%'; bar.style.background='#ffd700';
+  void bar.offsetWidth;
+  label.textContent=timerSeconds;
+  timerInterval=setInterval(()=>{
+    timerSeconds--;
+    label.textContent=timerSeconds;
+    const pct=(timerSeconds/20)*100;
+    bar.style.transition='width 1s linear, background 1s linear';
+    bar.style.width=pct+'%';
+    if(timerSeconds<=5) bar.style.background='#dc2626';
+    if(timerSeconds<=0){
+      stopTimer();
+      showToast('Time up! Next team.',true);
+      spinVal=0; hasSpunThisTurn=false;
+      document.getElementById('spin-result').textContent='';
+      buildBoard();buildAlpha();refreshUI();
+      scheduleForcedNextTurn(1200);
+    }
+  },1000);
+}
+function stopTimer(){
+  clearInterval(timerInterval); timerInterval=null;
+  document.getElementById('timer-bar-wrap').style.display='none';
+  document.getElementById('timer-label').style.display='none';
+}
+let teams=[],scores=[],teamIdx=0,pot=0,spinVal=0;
+let puzzles=[],puzIdx=0,revealed=new Set(),spinning=false;
+let wheelAngle=0,roundNum=1;
+let vowelBuyMode=false; // true = next click is a vowel purchase
+let hasSpunThisTurn=false;
+let pendingTurnTimeout=null; // guard against double-advancing turns
+
+/* ── Start ── */
+function startGame(){
+  teams=[0,1,2,3].map(i=>document.getElementById("t"+i).value.trim()||"Team "+(i+1));
+  scores=[0,0,0,0];
+  [0,1,2,3].forEach(i=>document.getElementById("sn"+i).textContent=teams[i]);
+  puzzles=[...PUZZLES].sort(()=>Math.random()-0.5);
+  puzIdx=0;teamIdx=0;pot=0;spinVal=0;roundNum=1;
+  document.getElementById("setup-screen").style.display="none";
+  document.getElementById("game-screen").style.display="block";
+  drawWheel();
+  loadPuzzle();
+  refreshUI();
+}
+
+/* ── Puzzle ── */
+function loadPuzzle(){
+  stopTimer();
+  revealed=new Set();
+  pot=0;spinVal=0;vowelBuyMode=false;hasSpunThisTurn=false;
+  document.getElementById("spin-result").textContent="";
+  document.getElementById("spin-btn").removeAttribute("disabled");
+  buildBoard();
+  buildAlpha();
+  refreshUI();
+}
+
+function buildBoard(){
+  const {phrase,category}=puzzles[puzIdx];
+  document.getElementById("category-tag").textContent="Category: "+category;
+  // Split into words, render each as a flex group so words never break across rows
+  const words=phrase.split(" ");
+  let html=words.map(word=>{
+    const tiles=[...word].map(ch=>{
+      const show=revealed.has(ch)||ch==="'"||ch==="-";
+      return `<div class="tile${show?" lit":""}">${show?ch:""}</div>`;
+    }).join("");
+    return `<div class="word-group">${tiles}</div>`;
+  }).join("");
+  document.getElementById("letter-board").innerHTML=html;
+}
+
+function buildAlpha(){
+  const phrase=puzzles[puzIdx].phrase;
+  let cHtml="",vHtml="";
+  for(let c=65;c<=90;c++){
+    const ch=String.fromCharCode(c);
+    const used=revealed.has(ch);
+    const inWord=phrase.includes(ch);
+    let cls="ab";
+    if(used) cls+= inWord?" hit used":" miss used";
+    const isVowel=VOWELS.has(ch);
+    if(isVowel){
+      /* vowels always disabled unless in vowelBuyMode and not yet used */
+      const dis=used||!vowelBuyMode;
+      vHtml+=`<button class="${cls}"${dis?" disabled":""}
+        onclick="guessVowel('${ch}')">${ch}</button>`;
+    } else {
+      /* consonants: disabled until spun */
+      const dis=used||spinVal===0;
+      cHtml+=`<button class="${cls}"${dis?" disabled":""}
+        onclick="guess('${ch}')">${ch}</button>`;
+    }
+  }
+  document.getElementById("consonant-row").innerHTML=cHtml;
+  document.getElementById("vowel-row").innerHTML=vHtml;
+
+  /* buy vowel button: enabled if team can afford it and not in vowelBuyMode already */
+  const canAfford=scores[teamIdx]>=VOWEL_COST || pot>=VOWEL_COST;
+  document.getElementById("buy-vowel-btn").disabled = vowelBuyMode || !canAfford;
+  document.getElementById("buy-vowel-cost").textContent=
+    vowelBuyMode
+      ? "Now pick a vowel above"
+      : `Cost: ฿${VOWEL_COST.toLocaleString()} — deducted from team score`;
+}
+
+/* ── Guessing ── */
+function guess(ch){
+  if(VOWELS.has(ch)){showToast("Buy a vowel to guess vowels!");return;}
+  if(spinVal===0){showToast("Spin the wheel first!");return;}
+  if(revealed.has(ch))return;
+  revealed.add(ch);
+  const phrase=puzzles[puzIdx].phrase;
+  const n=[...phrase].filter(c=>c===ch).length;
+  if(n>0){
+    const earned=spinVal*n;
+    pot+=earned;
+    stopTimer();
+    showToast(`${n>1?n+"× ":""}${ch}! +฿${earned.toLocaleString()}`, false);
+    spinVal=0;
+    hasSpunThisTurn=false;
+    document.getElementById("spin-btn").removeAttribute("disabled");
+    document.getElementById("spin-result").textContent="";
+  } else {
+    showToast(`No ${ch} — next team's turn!`, true);
+    spinVal=0;
+    hasSpunThisTurn=false;
+    document.getElementById("spin-result").textContent="";
+    buildBoard();buildAlpha();refreshUI();
+    scheduleForcedNextTurn(1600);
+    return;
+  }
+  buildBoard();buildAlpha();refreshUI();checkComplete();
+}
+
+function buyVowelMode(){
+  vowelBuyMode=true;
+  buildAlpha();
+  showToast("Pick a vowel!", false);
+}
+
+function guessVowel(ch){
+  if(!vowelBuyMode)return;
+  if(revealed.has(ch))return;
+  /* deduct from pot first, then from score */
+  let cost=VOWEL_COST;
+  if(pot>=cost){pot-=cost;}
+  else{
+    const fromPot=pot; cost-=fromPot; pot=0;
+    scores[teamIdx]=Math.max(0,scores[teamIdx]-cost);
+  }
+  vowelBuyMode=false;
+  revealed.add(ch);
+  const phrase=puzzles[puzIdx].phrase;
+  const n=[...phrase].filter(c=>c===ch).length;
+  if(n>0){
+    showToast(`${n>1?n+"× ":""}${ch}! Spin again or buy another vowel.`, false);
+    spinVal=0;
+    document.getElementById("spin-btn").removeAttribute("disabled");
+    document.getElementById("spin-result").textContent="Spin for a consonant or buy a vowel";
+    buildBoard();buildAlpha();refreshUI();checkComplete();
+  } else {
+    showToast(`No ${ch}! Next team's turn.`, true);
+    spinVal=0;
+    document.getElementById("spin-result").textContent="";
+    buildBoard();buildAlpha();refreshUI();
+    scheduleForcedNextTurn(1600);
+  }
+}
+
+function checkComplete(){
+  const phrase=puzzles[puzIdx].phrase;
+  const allLit=[...phrase].filter(c=>c!==" "&&c!=="'"&&c!=="-").every(c=>revealed.has(c));
+  if(allLit){
+    stopTimer();
+    const won=pot;
+    scores[teamIdx]+=won;
+    pot=0;spinVal=0;
+    document.getElementById("spin-btn").setAttribute("disabled","");
+    document.getElementById("spin-result").textContent="";
+    refreshUI();buildAlpha();
+    showToast(`${teams[teamIdx]} wins ฿${won.toLocaleString()}! 🎉`, false);
+  }
+}
+
+/* ── Wheel ── */
+function drawWheel(hlIdx){
+  const segs=getSegments(roundNum);
+  const cv=document.getElementById("wheel");
+  const ctx=cv.getContext("2d");
+  const cx=210,cy=210,r=204,n=segs.length,arc=(2*Math.PI)/n;
+  ctx.clearRect(0,0,260,260);
+  segs.forEach((s,i)=>{
+    const a0=wheelAngle+i*arc,a1=a0+arc;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,a0,a1);ctx.closePath();
+    ctx.fillStyle=(i===hlIdx)?"#ffd700":s.col;ctx.fill();
+    ctx.strokeStyle="#0d0d1a";ctx.lineWidth=2;ctx.stroke();
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.rotate(a0+arc/2);
+    
+    ctx.textAlign="right";
+    ctx.fillStyle = s.val === -2 ? "#ffffff" : "#000000";
+
+    const fs =
+  s.label.length > 8 ? 14 :
+  s.label.length > 4 ? 18 :
+  22;
+
+    ctx.font=`900 ${fs}px "Arial Rounded MT Bold", Arial, sans-serif`;
+    ctx.fillText(s.label,r-25,5);
+    
+    ctx.restore();
+  });
+
+  /* Chrome outer rim */
+
+ctx.beginPath();
+ctx.arc(cx, cy, r, 0, Math.PI * 2);
+
+ctx.lineWidth = 16;
+ctx.strokeStyle = "#c0c0c0";
+ctx.stroke();
+
+ctx.beginPath();
+ctx.arc(cx, cy, r - 8, 0, Math.PI * 2);
+
+ctx.lineWidth = 3;
+ctx.strokeStyle = "#ffffff";
+ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,26,0,2*Math.PI);
+  ctx.fillStyle="#0d0d1a";ctx.fill();
+  ctx.strokeStyle="#c0c0c0";ctx.lineWidth=2;ctx.stroke();
+}
+
+function spinWheel(){
+  if(spinning)return;
+  spinning=true;spinVal=0;vowelBuyMode=false;
+  document.getElementById("spin-btn").setAttribute("disabled","");
+  document.getElementById("spin-result").textContent="";
+  buildAlpha();
+  const rot=(Math.random()*1440+1440)*(Math.PI/180);
+  const dur=3000+Math.random()*1000;
+  const t0=performance.now(),a0=wheelAngle;
+  const segs=getSegments(roundNum);
+  function frame(t){
+    const p=Math.min((t-t0)/dur,1);
+    const ease=1-Math.pow(1-p,4);
+    wheelAngle=a0+rot*ease;
+    drawWheel();
+    if(p<1){requestAnimationFrame(frame);return;}
+    spinning=false;
+    wheelAngle=wheelAngle%(2*Math.PI);
+    const arc=(2*Math.PI)/segs.length;
+    let norm=(-Math.PI/2-wheelAngle)%(2*Math.PI);
+    if(norm<0)norm+=2*Math.PI;
+    const idx=Math.floor(norm/arc)%segs.length;
+    drawWheel(idx);
+    const s=segs[idx];
+    if(s.val===-2){
+      /* BANKRUPT */
+      document.getElementById("spin-result").textContent="BANKRUPT!";
+      showToast("BANKRUPT! Pot lost.", true);
+      pot=0;spinVal=0;hasSpunThisTurn=false;
+      document.getElementById("spin-btn").removeAttribute("disabled");
+      buildAlpha();refreshUI();
+      /* end turn */
+      scheduleForcedNextTurn(1600);
+    } else if(s.val===-1){
+      /* LOSE A TURN */
+      document.getElementById("spin-result").textContent="LOSE A TURN!";
+      showToast("Lose a turn — next team!", true);
+      spinVal=0;hasSpunThisTurn=false;
+      document.getElementById("spin-btn").removeAttribute("disabled");
+      buildAlpha();refreshUI();
+      scheduleForcedNextTurn(1600);
+    } else {
+      spinVal=s.val;
+      hasSpunThisTurn=true;
+      document.getElementById("spin-result").textContent="฿"+s.val.toLocaleString()+" per letter";
+      buildAlpha(); /* enable consonant buttons */
+      startTimer();
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+function scheduleForcedNextTurn(delay){
+  if(pendingTurnTimeout)clearTimeout(pendingTurnTimeout);
+  pendingTurnTimeout=setTimeout(()=>{pendingTurnTimeout=null;forcedNextTurn();},delay);
+}
+function forcedNextTurn(){
+  if(pendingTurnTimeout){clearTimeout(pendingTurnTimeout);pendingTurnTimeout=null;}
+  stopTimer();
+  teamIdx=(teamIdx+1)%4;
+  spinVal=0;vowelBuyMode=false;hasSpunThisTurn=false;
+  document.getElementById("spin-btn").removeAttribute("disabled");
+  document.getElementById("spin-result").textContent="";
+  buildAlpha();refreshUI();
+}
+
+/* ── Manual controls ── */
+function awardPot(){
+  scores[teamIdx]+=pot;
+  showToast(teams[teamIdx]+" wins ฿"+pot.toLocaleString()+"!", false);
+  pot=0;spinVal=0;
+  refreshUI();
+}
+function nextTurn(){
+  if(pendingTurnTimeout){clearTimeout(pendingTurnTimeout);pendingTurnTimeout=null;}
+  stopTimer();
+  teamIdx=(teamIdx+1)%4;
+  spinVal=0;vowelBuyMode=false;hasSpunThisTurn=false;
+  document.getElementById("spin-btn").removeAttribute("disabled");
+  document.getElementById("spin-result").textContent="";
+  buildAlpha();refreshUI();
+}
+function nextPuzzle(){
+  puzIdx++;roundNum++;
+  if(puzIdx>=puzzles.length){showWinner();return;}
+  document.getElementById("round-badge").textContent="Round "+roundNum;
+  drawWheel();
+  loadPuzzle();
+}
+
+/* ── Solve ── */
+function openSolve(){
+  document.getElementById("solve-input").value="";
+  document.getElementById("solve-modal").classList.add("open");
+  setTimeout(()=>document.getElementById("solve-input").focus(),50);
+}
+function closeSolve(){document.getElementById("solve-modal").classList.remove("open");}
+function checkSolve(){
+  const g=document.getElementById("solve-input").value.trim().toUpperCase();
+  const ans=puzzles[puzIdx].phrase;
+  closeSolve();
+  if(g===ans){
+    revealed=new Set([...ans].filter(c=>c!==" "&&c!=="'"&&c!=="-"));
+    buildBoard();
+    scores[teamIdx]+=pot;
+    showToast(`${teams[teamIdx]} solves it! +฿${pot.toLocaleString()}`, false);
+    pot=0;spinVal=0;
+    document.getElementById("spin-btn").setAttribute("disabled","");
+    refreshUI();
+  } else {
+    showToast("Wrong! Next team's turn.", true);
+    pot=0;spinVal=0;
+    scheduleForcedNextTurn(0);
+  }
+}
+
+/* ── UI ── */
+function refreshUI(){
+  [0,1,2,3].forEach(i=>{
+    document.getElementById("sc"+i).classList.toggle("active-team",i===teamIdx);
+    document.getElementById("sp"+i).textContent=scores[i].toLocaleString();
+  });
+  document.getElementById("turn-name").textContent=teams[teamIdx];
+  document.getElementById("turn-name").style.color=TEAM_COLORS[teamIdx];
+  document.getElementById("pot-val").textContent=pot.toLocaleString();
+}
+
+let _tt;
+function showToast(msg,bad){
+  const el=document.getElementById("toast");
+  el.textContent=msg;
+  el.className=bad?"up bad":"up";
+  clearTimeout(_tt);
+  _tt=setTimeout(()=>el.classList.remove("up"),2400);
+}
+
+/* ── Winner ── */
+function showWinner(){
+  document.getElementById("game-screen").style.display="none";
+  document.getElementById("winner-screen").style.display="block";
+  const ranked=teams.map((n,i)=>({n,s:scores[i],c:TEAM_COLORS[i]})).sort((a,b)=>b.s-a.s);
+  const medals=["🥇","🥈","🥉","4th"];
+  document.getElementById("winner-list").innerHTML=ranked.map((r,i)=>`
+    <div class="podium-entry${i===0?" first":""}">
+      <span class="pod-rank">${medals[i]}</span>
+      <span class="pod-dot" style="background:${r.c}"></span>
+      <span class="pod-name">${r.n}</span>
+      <span class="pod-score">฿${r.s.toLocaleString()}</span>
+    </div>`).join("");
+}
+
+/* ── Keyboard ── */
+document.addEventListener("keydown",e=>{
+  if(document.getElementById("solve-modal").classList.contains("open")){
+    if(e.key==="Enter")checkSolve();
+    if(e.key==="Escape")closeSolve();
+    return;
+  }
+  const ch=e.key.toUpperCase();
+  if(ch.length===1&&ch>="A"&&ch<="Z"){
+    if(VOWELS.has(ch)){
+      if(vowelBuyMode&&!revealed.has(ch))guessVowel(ch);
+    } else {
+      if(spinVal>0&&!revealed.has(ch))guess(ch);
+    }
+  }
+});
+</script>
+</body>
+</html>
