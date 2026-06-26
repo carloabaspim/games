@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Survey Showdown - Unit 2 Crime & Investigation</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap');
+
+*{ margin:0; padding:0; box-sizing:border-box; }
+
+:root{
+  --gold:#f5c518;
+  --red:#c0392b;
+  --green:#27ae60;
+  --blue:#2980b9;
+  --bg:#111;
+}
+
+body{
+  background:var(--bg);
+  color:#fff;
+  font-family:'Inter',sans-serif;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+
+/* ── SETUP ── */
+#setup-screen{
+  width:100vw; min-height:100vh;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  background:radial-gradient(ellipse at center,#1a1a2e 0%,#000 100%);
+  padding:20px;
+}
+
+.setup-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:72px; color:var(--gold);
+  letter-spacing:6px; text-align:center;
+  line-height:1; text-shadow:0 0 40px rgba(245,197,24,0.4);
+}
+
+.setup-sub{
+  font-size:14px; color:#888;
+  letter-spacing:3px; text-transform:uppercase;
+  margin-bottom:28px; text-align:center;
+}
+
+.setup-card{
+  background:#1a1a1a; border:1px solid #333;
+  border-radius:16px; padding:20px 28px;
+  width:100%; max-width:440px; margin-bottom:14px;
+}
+
+.setup-card label{
+  display:block; color:#888; font-size:11px;
+  letter-spacing:2px; text-transform:uppercase; margin-bottom:10px;
+}
+
+.counter-row{
+  display:flex; align-items:center;
+  justify-content:center; gap:20px;
+}
+
+.counter-row span{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:40px; color:var(--gold);
+  min-width:40px; text-align:center;
+}
+
+.btn-counter{
+  background:#222; border:1px solid #444;
+  color:#fff; width:36px; height:36px;
+  border-radius:8px; font-size:18px;
+  cursor:pointer;
+}
+.btn-counter:hover{ background:#333; }
+
+#team-inputs input{
+  display:block; width:100%;
+  background:#111; border:1px solid #333;
+  border-radius:8px; color:#fff;
+  padding:10px 14px; font-size:14px;
+  font-family:'Inter',sans-serif;
+  margin-bottom:8px;
+  text-transform:uppercase; letter-spacing:1px;
+}
+#team-inputs input:focus{ outline:none; border-color:var(--gold); }
+#team-inputs input::placeholder{ color:#444; text-transform:none; }
+
+.btn-start{
+  background:var(--gold); color:#000;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:22px; letter-spacing:3px;
+  padding:14px 48px; border:none;
+  border-radius:12px; cursor:pointer; margin-top:8px;
+}
+.btn-start:hover{ background:#ffd700; }
+
+/* ── GAME ── */
+#game-screen{
+  width:100vw; height:100vh;
+  display:none; flex-direction:column;
+  background:#0a0a0a; position:relative; overflow:hidden;
+}
+
+/* TOP BAR */
+#top-bar{
+  background:#111; border-bottom:1px solid #222;
+  padding:6px 16px; display:flex;
+  align-items:center; justify-content:space-between;
+  flex-shrink:0;
+}
+
+#round-info{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:16px; color:#555; letter-spacing:2px;
+}
+
+#title-badge{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:20px; color:var(--gold); letter-spacing:4px;
+}
+
+/* SCOREBOARD */
+#scoreboard{
+  display:flex; gap:8px;
+  justify-content:center;
+  padding:6px 16px; flex-shrink:0; flex-wrap:wrap;
+}
+
+.team-score{
+  background:#1a1a1a; border:2px solid #2a2a2a;
+  border-radius:10px; padding:6px 16px;
+  text-align:center; min-width:110px;
+  transition:all 0.3s;
+}
+
+.team-score.control{ border-color:var(--gold); background:#1a1500; }
+.team-score.steal-turn{ border-color:#e74c3c; background:#1a0500; animation:pulse-red 0.8s infinite alternate; }
+
+@keyframes pulse-red{
+  from{ border-color:#e74c3c; }
+  to{ border-color:#ff8888; }
+}
+
+.ts-name{ font-size:10px; color:#666; letter-spacing:1px; text-transform:uppercase; }
+.ts-pts{ font-family:'Bebas Neue',sans-serif; font-size:28px; color:var(--gold); line-height:1; }
+.ts-label{
+  font-size:9px; letter-spacing:1px; text-transform:uppercase;
+  margin-top:2px; height:12px;
+}
+
+/* BOARD */
+#board-wrap{ padding:6px 20px 4px; flex-shrink:0; }
+
+#board{
+  background:linear-gradient(180deg,#1a2a1a 0%,#0d1f0d 100%);
+  border:3px solid #2a5a2a; border-radius:20px;
+  padding:10px 14px;
+  box-shadow:0 0 30px rgba(39,174,96,0.15),inset 0 0 20px rgba(0,0,0,0.5);
+}
+
+#board-inner{
+  display:grid; grid-template-columns:1fr 1fr; gap:5px;
+}
+
+.answer-tile{
+  background:#0d1f0d; border:1px solid #1a3a1a;
+  border-radius:8px; display:flex;
+  align-items:center; padding:5px 10px;
+  gap:8px; min-height:40px; overflow:hidden;
+}
+
+.answer-tile.revealed{
+  background:#0f2e0f; border-color:#27ae60;
+  box-shadow:0 0 8px rgba(39,174,96,0.2);
+}
+
+.tile-num{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:16px; color:#2a5a2a; min-width:18px;
+}
+.answer-tile.revealed .tile-num{ color:#27ae60; }
+
+.tile-x{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:18px; color:#c0392b; opacity:0.5;
+  flex:1; letter-spacing:6px; overflow:hidden;
+}
+
+.tile-text{
+  flex:1; font-size:12px; font-weight:600;
+  color:#55ff55; letter-spacing:1px; text-transform:uppercase;
+}
+
+.tile-pts{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:20px; color:var(--gold);
+  min-width:30px; text-align:right;
+}
+
+/* PODIUM */
+#podium-wrap{
+  flex:1; display:flex;
+  align-items:flex-end; justify-content:center;
+  padding:0 40px; min-height:0;
+}
+
+.podium-svg{ width:100%; max-width:600px; height:100%; max-height:140px; }
+
+/* STRIKES */
+#strike-area{
+  text-align:center; padding:2px 0;
+  display:flex; justify-content:center; gap:12px; flex-shrink:0;
+}
+
+.strike-x{
+  font-family:'Bebas Neue',sans-serif; font-size:34px;
+  color:var(--red); visibility:hidden;
+  text-shadow:0 0 10px rgba(192,57,43,0.6);
+}
+.strike-x.show{ visibility:visible; }
+
+/* STATUS BANNER */
+#status-banner{
+  text-align:center; padding:4px 16px; flex-shrink:0;
+  min-height:32px; display:flex; align-items:center; justify-content:center;
+}
+
+#status-text{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:18px; letter-spacing:2px;
+  transition:all 0.3s;
+}
+
+/* QUESTION */
+#question-wrap{
+  background:#111; border-top:1px solid #222;
+  padding:8px 20px; flex-shrink:0;
+}
+
+#question-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:20px; color:#fff;
+  letter-spacing:2px; text-align:center; line-height:1.2;
+}
+
+/* INPUT ROW */
+#input-row{
+  background:#0a0a0a; padding:8px 16px;
+  display:flex; gap:8px; flex-shrink:0;
+  border-top:1px solid #1a1a1a;
+}
+
+#guess-input{
+  flex:1; background:#1a1a1a; border:1px solid #333;
+  border-radius:10px; color:#fff;
+  padding:9px 14px; font-size:14px;
+  font-family:'Inter',sans-serif;
+  text-transform:uppercase; letter-spacing:1px;
+}
+#guess-input:focus{ outline:none; border-color:var(--gold); }
+#guess-input::placeholder{ color:#444; text-transform:none; letter-spacing:0; }
+#guess-input:disabled{ opacity:0.3; }
+
+.btn-check{
+  background:var(--gold); color:#000;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:17px; letter-spacing:2px;
+  padding:9px 18px; border:none;
+  border-radius:10px; cursor:pointer;
+}
+.btn-check:hover{ background:#ffd700; }
+.btn-check:disabled{ opacity:0.3; cursor:default; }
+
+/* HOST BAR */
+#host-bar{
+  background:#0a0a0a; padding:5px 16px 8px;
+  display:flex; align-items:center;
+  justify-content:center; gap:8px; flex-shrink:0;
+}
+
+.host-label{ font-size:10px; color:#333; letter-spacing:2px; text-transform:uppercase; }
+
+.btn-strike{
+  background:#2a0a0a; border:1px solid #5a1a1a;
+  color:var(--red); font-family:'Bebas Neue',sans-serif;
+  font-size:15px; letter-spacing:2px;
+  padding:5px 14px; border-radius:8px; cursor:pointer;
+}
+.btn-strike:hover{ background:#3a1010; }
+
+.btn-next{
+  background:#1a1a00; border:1px solid #4a4a00;
+  color:var(--gold); font-family:'Bebas Neue',sans-serif;
+  font-size:15px; letter-spacing:2px;
+  padding:5px 14px; border-radius:8px; cursor:pointer;
+}
+.btn-next:hover{ background:#2a2a00; }
+
+/* SPINNER OVERLAY */
+#spinner-overlay{
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,0.94); z-index:200;
+  align-items:center; justify-content:center;
+}
+#spinner-overlay.show{ display:flex; }
+
+#spinner-box{
+  background:#1a1a1a; border:2px solid var(--gold);
+  border-radius:20px; padding:36px 48px;
+  text-align:center; max-width:480px; width:90%;
+}
+
+#spinner-box h3{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:36px; color:#888;
+  letter-spacing:4px; margin-bottom:24px;
+}
+
+#spinner-name{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:52px; letter-spacing:4px;
+  min-height:64px; line-height:1;
+  margin-bottom:8px;
+  transition:color 0.1s;
+}
+
+#spinner-sub{
+  font-size:13px; color:#555; letter-spacing:3px;
+  text-transform:uppercase; min-height:20px;
+}
+
+/* STEAL OVERLAY */
+#steal-overlay{
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,0.92); z-index:200;
+  align-items:center; justify-content:center;
+}
+#steal-overlay.show{ display:flex; }
+
+#steal-box{
+  background:#1a0505; border:2px solid #e74c3c;
+  border-radius:20px; padding:32px 40px;
+  text-align:center; max-width:480px; width:90%;
+}
+
+#steal-box h3{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:36px; color:#e74c3c;
+  letter-spacing:3px; margin-bottom:6px;
+}
+
+#steal-pts{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:52px; color:var(--gold); line-height:1.1; margin-bottom:8px;
+}
+
+#steal-box p{
+  color:#888; font-size:12px; letter-spacing:2px;
+  text-transform:uppercase; margin-bottom:20px;
+}
+
+#steal-input-row{
+  display:flex; gap:8px; margin-bottom:16px;
+}
+
+#steal-input{
+  flex:1; background:#111; border:1px solid #555;
+  border-radius:10px; color:#fff;
+  padding:10px 14px; font-size:14px;
+  font-family:'Inter',sans-serif;
+  text-transform:uppercase; letter-spacing:1px;
+}
+#steal-input:focus{ outline:none; border-color:#e74c3c; }
+
+.btn-steal-check{
+  background:#e74c3c; color:#fff;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:17px; letter-spacing:2px;
+  padding:10px 18px; border:none;
+  border-radius:10px; cursor:pointer;
+}
+
+#steal-team-label{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:22px; color:#fff; margin-bottom:12px;
+}
+
+.btn-no-steal{
+  background:transparent; border:1px solid #444;
+  color:#666; font-family:'Bebas Neue',sans-serif;
+  font-size:15px; letter-spacing:2px;
+  padding:8px 20px; border-radius:8px; cursor:pointer;
+}
+.btn-no-steal:hover{ background:#222; }
+
+/* WRONG FLASH */
+#wrong-flash{
+  display:none; position:fixed; inset:0;
+  background:rgba(192,57,43,0.18); z-index:150;
+  pointer-events:none; animation:flashred 0.5s ease;
+}
+@keyframes flashred{ 0%{ opacity:1; } 100%{ opacity:0; } }
+
+/* CORRECT FLASH */
+#correct-flash{
+  display:none; position:fixed; inset:0;
+  background:rgba(39,174,96,0.15); z-index:150;
+  pointer-events:none; animation:flashgreen 0.5s ease;
+}
+@keyframes flashgreen{ 0%{ opacity:1; } 100%{ opacity:0; } }
+
+/* WINNER */
+#winner-screen{
+  width:100vw; min-height:100vh;
+  display:none; flex-direction:column;
+  align-items:center; justify-content:center;
+  background:radial-gradient(ellipse at center,#1a1a00 0%,#000 100%);
+  text-align:center; padding:20px;
+}
+
+.winner-title{
+  font-family:'Bebas Neue',sans-serif; font-size:64px;
+  color:var(--gold); letter-spacing:6px;
+  text-shadow:0 0 40px rgba(245,197,24,0.5); margin-bottom:24px;
+}
+
+#winner-list{
+  background:#1a1a1a; border:1px solid #333;
+  border-radius:16px; padding:24px 40px;
+  margin-bottom:24px; min-width:300px;
+}
+
+.winner-row{
+  display:flex; align-items:center;
+  justify-content:space-between; gap:32px;
+  padding:8px 0; border-bottom:1px solid #222; font-size:18px;
+}
+.winner-row:last-child{ border-bottom:none; }
+.winner-row.first .wr-name{ color:var(--gold); font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:2px; }
+.winner-row.first .wr-score{ font-family:'Bebas Neue',sans-serif; font-size:28px; color:var(--gold); }
+.wr-rank{ color:#444; font-size:14px; min-width:24px; }
+.wr-name{ color:#ccc; font-weight:600; flex:1; text-align:left; }
+.wr-score{ color:#888; font-weight:600; }
+
+.btn-again{
+  background:var(--gold); color:#000;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:22px; letter-spacing:3px;
+  padding:14px 48px; border:none;
+  border-radius:12px; cursor:pointer;
+}
+.btn-again:hover{ background:#ffd700; }
+</style>
+</head>
+<body>
+
+<!-- SETUP -->
+<div id="setup-screen">
+  <div class="setup-title">SURVEY SHOWDOWN</div>
+  <div class="setup-sub">Unit 2 — Crime &amp; Investigation</div>
+  <div class="setup-card">
+    <label>Number of Teams (2–4)</label>
+    <div class="counter-row">
+      <button class="btn-counter" onclick="changeTeams(-1)">−</button>
+      <span id="team-count">2</span>
+      <button class="btn-counter" onclick="changeTeams(1)">+</button>
+    </div>
+  </div>
+  <div class="setup-card">
+    <label>Team Names</label>
+    <div id="team-inputs"></div>
+  </div>
+  <button class="btn-start" onclick="startGame()">START GAME</button>
+</div>
+
+<!-- GAME -->
+<div id="game-screen">
+  <div id="top-bar">
+    <div id="round-info">ROUND 1</div>
+    <div id="title-badge">SURVEY SHOWDOWN</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:#555;letter-spacing:2px;">UNIT 2</div>
+  </div>
+
+  <div id="scoreboard"></div>
+
+  <div id="board-wrap">
+    <div id="board">
+      <div id="board-inner"></div>
+    </div>
+  </div>
+
+  <div id="podium-wrap">
+    <svg class="podium-svg" viewBox="0 0 600 150" xmlns="http://www.w3.org/2000/svg">
+      <rect x="50" y="100" width="500" height="40" rx="6" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+      <rect x="80" y="85" width="440" height="20" rx="4" fill="#222" stroke="#2a2a2a" stroke-width="1"/>
+      <rect x="200" y="105" width="200" height="24" rx="4" fill="#f5c518"/>
+      <text x="300" y="122" text-anchor="middle" fill="#000" font-family="'Bebas Neue',sans-serif" font-size="14" letter-spacing="2">SURVEY SHOWDOWN</text>
+      <circle cx="130" cy="62" r="14" fill="#c0392b"/>
+      <rect x="118" y="76" width="24" height="28" rx="4" fill="#c0392b"/>
+      <circle cx="195" cy="58" r="14" fill="#e67e22"/>
+      <rect x="183" y="72" width="24" height="30" rx="4" fill="#e67e22"/>
+      <circle cx="300" cy="52" r="16" fill="#f5c518"/>
+      <rect x="286" y="68" width="28" height="34" rx="4" fill="#f5c518"/>
+      <line x1="286" y1="80" x2="265" y2="65" stroke="#f5c518" stroke-width="5" stroke-linecap="round"/>
+      <line x1="314" y1="80" x2="335" y2="65" stroke="#f5c518" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="405" cy="58" r="14" fill="#27ae60"/>
+      <rect x="393" y="72" width="24" height="30" rx="4" fill="#27ae60"/>
+      <circle cx="470" cy="62" r="14" fill="#2980b9"/>
+      <rect x="458" y="76" width="24" height="28" rx="4" fill="#2980b9"/>
+    </svg>
+  </div>
+
+  <div id="strike-area">
+    <span class="strike-x" id="s1">✕</span>
+    <span class="strike-x" id="s2">✕</span>
+    <span class="strike-x" id="s3">✕</span>
+  </div>
+
+  <div id="status-banner">
+    <div id="status-text" style="color:#888;"></div>
+  </div>
+
+  <div id="question-wrap">
+    <div id="question-title"></div>
+  </div>
+
+  <div id="input-row">
+    <div id="timer-display" style="display:none; font-family:'Bebas Neue',sans-serif; font-size:28px; min-width:48px; text-align:center; line-height:1; align-self:center;"></div>
+    <input type="text" id="guess-input" placeholder="Type answer here..." autocomplete="off">
+    <button class="btn-check" id="btn-check" onclick="checkAnswer()">CHECK ↵</button>
+  </div>
+
+  <div id="host-bar">
+    <span class="host-label">Host:</span>
+    <button class="btn-strike" onclick="addStrike()">✕ STRIKE</button>
+    <button class="btn-next" onclick="nextRound()">NEXT ROUND ▶</button>
+  </div>
+</div>
+
+<!-- OVERLAYS -->
+<div id="wrong-flash"></div>
+<div id="correct-flash"></div>
+
+<!-- SPINNER OVERLAY -->
+<div id="spinner-overlay">
+  <div id="spinner-box">
+    <h3>SELECTING TEAM...</h3>
+    <div id="spinner-name"></div>
+    <div id="spinner-sub"></div>
+  </div>
+</div>
+
+<!-- STEAL OVERLAY -->
+<div id="steal-overlay">
+  <div id="steal-box">
+    <h3>🔥 STEAL!</h3>
+    <div id="steal-pts"></div>
+    <div id="steal-team-label"></div>
+    <p>One answer to steal all the points</p>
+    <div id="steal-input-row">
+      <input type="text" id="steal-input" placeholder="Enter steal answer..." autocomplete="off">
+      <button class="btn-steal-check" onclick="checkSteal()">GO ↵</button>
+    </div>
+    <button class="btn-no-steal" onclick="failSteal()">No Steal — Give Points to Control Team</button>
+  </div>
+</div>
+
+<!-- WINNER -->
+<div id="winner-screen">
+  <div class="winner-title">🏆 FINAL SCORES</div>
+  <div id="winner-list"></div>
+  <button class="btn-again" onclick="location.reload()">PLAY AGAIN</button>
+</div>
+
+<script>
+const BOARDS=[
+{question:"Name something a detective looks for at a crime scene.",answers:[["Evidence",35],["Fingerprints",25],["Witnesses",15],["DNA",15],["CCTV",10]]},
+{question:"Name something police do during an investigation.",answers:[["Question witnesses",30],["Analyse evidence",25],["Search the area",20],["Arrest suspects",15],["Check CCTV",10]]},
+{question:"Name a crime people often hear about.",answers:[["Theft",30],["Robbery",25],["Burglary",20],["Fraud",15],["Cybercrime",10]]},
+{question:"Name something hackers try to steal.",answers:[["Passwords",35],["Money",25],["Personal information",20],["Photos",10],["Accounts",10]]},
+{question:"Name a phrasal verb from Unit 2.",answers:[["Look into",30],["Work out",25],["Turn up",20],["Come across",15],["Find out",10]]},
+{question:"Name something people say when apologising.",answers:[["I'm sorry",35],["I feel terrible",20],["It won't happen again",20],["Please forgive me",15],["I'll make it up to you",10]]},
+{question:"Name an irregular past simple verb.",answers:[["Went",30],["Saw",25],["Took",20],["Found",15],["Came",10]]},
+{question:"Name something a criminal might steal.",answers:[["Money",30],["Jewellery",25],["Phone",20],["Car",15],["Laptop or Computer",10]]},
+{question:"Name a consequence of lying.",answers:[["Lose trust",35],["Punishment",25],["Arguments",15],["Guilt",15],["Detention",10]]},
+{question:"Name something that makes a password strong.",answers:[["Numbers",30],["Symbols",25],["Capital letters",20],["Length",15],["Unique words",10]]},
+{question:"Name something the police need to work out.",answers:[["Who the criminal is",30],["What happened",25],["The motive",20],["The timeline of the crime",15],["Whether the suspect is lying",10]]},
+{question:"Name a criminal.",answers:[["Thief",30],["Robber",25],["Burglar",20],["Smuggler",15],["Kidnapper",10]]},
+{question:"Name something detectives investigate.",answers:[["Crime",35],["Evidence",25],["Suspects",20],["Witnesses",10],["Motives",10]]},
+{question:"Name something police collect.",answers:[["Evidence",35],["Fingerprints",25],["DNA",20],["Photos",10],["Statements",10]]},
+{question:"Name something that can identify a suspect.",answers:[["Fingerprints",30],["DNA",25],["CCTV",20],["Witness",15],["Photograph",10]]},
+{question:"Name something a criminal might steal.",answers:[["Money",35],["Jewellery",25],["Phone",15],["Car",15],["Laptop",10]]},
+{question:"Name a cybercrime target.",answers:[["Passwords",35],["Bank account",25],["Personal information",20],["Email account",10],["Photos",10]]},
+{question:"Name something police might search for.",answers:[["Evidence",35],["Suspect",25],["Weapon",20],["Fingerprints",10],["Witness",10]]},
+{question:"Name something found at a crime scene.",answers:[["Evidence",35],["Fingerprints",25],["DNA",20],["Footprints",10],["Witness",10]]},
+{question:"Name a phrasal verb from Unit 2.",answers:[["Look into",30],["Find out",25],["Work out",20],["Turn up",15],["Come across",10]]},
+{question:"Name something you can 'look into'.",answers:[["Crime",35],["Problem",25],["Case",20],["Accident",10],["Complaint",10]]},
+{question:"Name something that can 'turn up'.",answers:[["Evidence",35],["Clue",25],["Suspect",15],["Witness",15],["Information",10]]},
+{question:"Name something you might 'find out'.",answers:[["Truth",35],["Answer",25],["Information",20],["Secret",10],["Name",10]]},
+{question:"Name a regular past simple verb.",answers:[["Started",30],["Walked",25],["Watched",20],["Played",15],["Visited",10]]},
+{question:"Name an irregular past simple verb.",answers:[["Went",30],["Saw",25],["Took",20],["Found",15],["Came",10]]},
+{question:"Complete the sentence: Yesterday I ____.",answers:[["Went",35],["Saw",25],["Played",15],["Visited",15],["Watched",10]]},
+{question:"Name a verb often used in the present continuous.",answers:[["Walking",30],["Running",25],["Talking",20],["Driving",15],["Watching",10]]},
+{question:"Name something people used to do before smartphones.",answers:[["Write letters",30],["Read newspapers",25],["Use maps",20],["Phone friends",15],["Watch DVDs",10]]},
+{question:"Complete the phrase: 'used to ____'.",answers:[["Play",30],["Live",25],["Walk",20],["Watch",15],["Read",10]]},
+{question:"Name something people often apologise for.",answers:[["Being late",35],["Making a mistake",25],["Breaking something",15],["Forgetting",15],["Lying",10]]},
+{question:"Name something you can say when apologising.",answers:[["I'm sorry",35],["My fault",25],["Please forgive me",20],["It won't happen again",10],["I apologise",10]]},
+{question:"Name a response to an apology.",answers:[["It's OK",35],["Don't worry",25],["Never mind",20],["That's alright",10],["No problem",10]]},
+];
+
+const TEAM_COLORS=["#f5c518","#e74c3c","#27ae60","#2980b9"];
+
+let teams=[],scores=[],currentBoard=0,strikes=0,revealedAnswers=[];
+let controlTeam=0,stealTeam=1,phase="faceof";
+let roundPoints=0,numTeams=2;
+
+// ── TIMER ──
+const TIMER_SECONDS=30;
+let timerInterval=null,timerLeft=0;
+
+function startTimer(){
+  clearInterval(timerInterval);
+  timerLeft=TIMER_SECONDS;
+  const el=document.getElementById("timer-display");
+  el.style.display="block";
+  el.textContent=timerLeft;
+  el.style.color="#f5c518";
+  timerInterval=setInterval(()=>{
+    timerLeft--;
+    el.textContent=timerLeft;
+    if(timerLeft<=10) el.style.color="#e74c3c";
+    if(timerLeft<=5){ playBeep(880,0.08); }
+    if(timerLeft<=0){
+      clearInterval(timerInterval);
+      el.textContent="0";
+      if(phase==="play"){ addStrike(); }
+    }
+  },1000);
+}
+
+function stopTimer(){
+  clearInterval(timerInterval);
+  document.getElementById("timer-display").style.display="none";
+}
+
+// ── SOUND (Web Audio API) ──
+const AudioCtx=window.AudioContext||window.webkitAudioContext;
+let audioCtx=null;
+
+function getCtx(){
+  if(!audioCtx) audioCtx=new AudioCtx();
+  return audioCtx;
+}
+
+function playBeep(freq,vol=0.3,dur=0.15,type="sine"){
+  try{
+    const ctx=getCtx();
+    const o=ctx.createOscillator();
+    const g=ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type=type; o.frequency.value=freq;
+    g.gain.setValueAtTime(vol,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dur);
+    o.start(ctx.currentTime); o.stop(ctx.currentTime+dur);
+  }catch(e){}
+}
+
+function soundCorrect(){
+  // ascending ding
+  playBeep(523,0.3,0.12);
+  setTimeout(()=>playBeep(659,0.3,0.12),130);
+  setTimeout(()=>playBeep(784,0.3,0.18),260);
+}
+
+function soundWrong(){
+  // descending buzz
+  playBeep(220,0.4,0.18,"sawtooth");
+  setTimeout(()=>playBeep(180,0.4,0.25,"sawtooth"),180);
+}
+
+function soundReveal(){
+  // short fanfare
+  [523,659,784,1047].forEach((f,i)=>setTimeout(()=>playBeep(f,0.25,0.15),i*90));
+}
+
+function soundSteal(){
+  playBeep(440,0.3,0.1);
+  setTimeout(()=>playBeep(554,0.3,0.1),110);
+  setTimeout(()=>playBeep(659,0.3,0.1),220);
+  setTimeout(()=>playBeep(880,0.4,0.25),330);
+}
+
+// ── FUZZY MATCHING ──
+const STOP_WORDS=new Set(["a","an","the","to","of","and","or","in","on","at","is","it","its"]);
+
+function normalise(str){
+  return str.toLowerCase()
+    .replace(/[^a-z0-9\s]/g,"")
+    .split(/\s+/)
+    .filter(w=>!STOP_WORDS.has(w))
+    .join(" ")
+    .trim();
+}
+
+function stemWord(w){
+  // simple English stemmer: strip common suffixes
+  return w
+    .replace(/ing$/,"")
+    .replace(/tion$|sion$/,"")
+    .replace(/ness$|ment$|ful$|less$/,"")
+    .replace(/ers?$|ies$|ied$/,"")
+    .replace(/es$|s$/,"");
+}
+
+function stemPhrase(str){
+  return normalise(str).split(" ").map(stemWord).join(" ");
+}
+
+function fuzzyMatch(guess,answer){
+  const g=normalise(guess);
+  const a=normalise(answer);
+  // exact normalised match
+  if(g===a) return true;
+  // stemmed match
+  if(stemPhrase(g)===stemPhrase(a)) return true;
+  // one contains the other (normalised)
+  if(a.includes(g)||g.includes(a)) return true;
+  // stemmed containment
+  const gs=stemPhrase(g), as=stemPhrase(a);
+  if(as.includes(gs)||gs.includes(as)) return true;
+  // significant word overlap: if >50% of guess words match answer words
+  const gWords=new Set(gs.split(" ").filter(Boolean));
+  const aWords=new Set(as.split(" ").filter(Boolean));
+  if(gWords.size===0||aWords.size===0) return false;
+  let overlap=0;
+  gWords.forEach(w=>{ if(aWords.has(w)) overlap++; });
+  return overlap/Math.max(gWords.size,1)>=0.6;
+}
+
+function changeTeams(d){
+  let n=parseInt(document.getElementById("team-count").textContent);
+  n=Math.max(2,Math.min(4,n+d));
+  document.getElementById("team-count").textContent=n;
+  renderInputs();
+}
+
+function renderInputs(){
+  const n=parseInt(document.getElementById("team-count").textContent);
+  let h="";
+  for(let i=0;i<n;i++) h+=`<input id="t${i}" placeholder="Team ${i+1} name">`;
+  document.getElementById("team-inputs").innerHTML=h;
+}
+
+function startGame(){
+  numTeams=parseInt(document.getElementById("team-count").textContent);
+  teams=[];scores=[];
+  for(let i=0;i<numTeams;i++){
+    const v=document.getElementById(`t${i}`).value.trim()||`Team ${i+1}`;
+    teams.push(v.toUpperCase());scores.push(0);
+  }
+  BOARDS.sort(()=>Math.random()-0.5);
+  document.getElementById("setup-screen").style.display="none";
+  document.getElementById("game-screen").style.display="flex";
+  loadBoard();
+}
+
+function loadBoard(){
+  strikes=0;revealedAnswers=[];roundPoints=0;
+  phase="faceof";
+  stopTimer();
+  document.getElementById("round-info").textContent=`ROUND ${currentBoard+1} OF ${Math.min(BOARDS.length,10)}`;
+  document.getElementById("question-title").textContent=BOARDS[currentBoard].question.toUpperCase();
+  renderBoard();updateScoreboard();updateStrikes();
+  setInput(false);
+  showSpinner();
+}
+
+function showSpinner(){
+  document.getElementById("spinner-overlay").classList.add("show");
+  const nameEl=document.getElementById("spinner-name");
+  const subEl=document.getElementById("spinner-sub");
+  subEl.textContent="";
+
+  // Pick the winner upfront
+  const winner=Math.floor(Math.random()*numTeams);
+
+  // Spin fast then slow, land on winner
+  let ticks=0;
+  const totalTicks=24; // how many flashes
+  let current=0;
+  let delay=60; // start fast
+
+  function tick(){
+    nameEl.textContent=teams[current];
+    nameEl.style.color=TEAM_COLORS[current];
+    current=(current+1)%numTeams;
+    ticks++;
+
+    // slow down in last 8 ticks
+    if(ticks>totalTicks-8) delay+=60;
+
+    if(ticks<totalTicks){
+      setTimeout(tick, delay);
+    } else {
+      // land on winner
+      nameEl.textContent=teams[winner];
+      nameEl.style.color=TEAM_COLORS[winner];
+      subEl.style.color=TEAM_COLORS[winner];
+      subEl.textContent="GOES FIRST!";
+      setTimeout(()=>{
+        document.getElementById("spinner-overlay").classList.remove("show");
+        controlTeam=winner;
+        stealTeam=(winner+1)%numTeams;
+        phase="play";
+        setStatus(`${teams[controlTeam]} HAS CONTROL — PLAY THE BOARD!`,"#f5c518");
+        updateScoreboard();
+        setInput(true);
+        startTimer();
+        setTimeout(()=>document.getElementById("guess-input").focus(),100);
+      }, 1400);
+    }
+  }
+  tick();
+}
+
+function renderBoard(){
+  const b=BOARDS[currentBoard];
+  let h="";
+  for(let i=0;i<b.answers.length;i++){
+    h+=`<div class="answer-tile" id="tile${i}">
+      <span class="tile-num">${i+1}</span>
+      <span class="tile-x" id="tx${i}">✕ ✕ ✕</span>
+      <span class="tile-text" id="answer${i}" style="display:none">${b.answers[i][0].toUpperCase()}</span>
+      <span class="tile-pts" id="points${i}" style="display:none">${b.answers[i][1]}</span>
+    </div>`;
+  }
+  document.getElementById("board-inner").innerHTML=h;
+}
+
+function revealTile(i){
+  document.getElementById(`tx${i}`).style.display="none";
+  document.getElementById(`answer${i}`).style.display="block";
+  document.getElementById(`points${i}`).style.display="block";
+  document.getElementById(`tile${i}`).classList.add("revealed");
+}
+
+function revealAll(){
+  const b=BOARDS[currentBoard];
+  for(let i=0;i<b.answers.length;i++) revealTile(i);
+}
+
+function checkAnswer(){
+  if(phase!=="play") return;
+  const guess=document.getElementById("guess-input").value.trim().toLowerCase();
+  if(!guess) return;
+  const b=BOARDS[currentBoard];
+
+  // Check if already revealed
+  for(let i=0;i<b.answers.length;i++){
+    if(revealedAnswers.includes(i)&&fuzzyMatch(guess,b.answers[i][0])){
+      setStatus(`ALREADY REVEALED — TRY AGAIN!`,"#888");
+      document.getElementById("guess-input").value="";
+      return;
+    }
+  }
+
+  let found=false;
+  for(let i=0;i<b.answers.length;i++){
+    if(!revealedAnswers.includes(i)&&fuzzyMatch(guess,b.answers[i][0])){
+      revealTile(i);
+      revealedAnswers.push(i);
+      roundPoints+=b.answers[i][1];
+      found=true;
+      soundCorrect();
+      flashCorrect();
+      stopTimer();
+      setStatus(`CORRECT! +${b.answers[i][1]} PTS — KEEP GOING ${teams[controlTeam]}!`,"#27ae60");
+      if(revealedAnswers.length===b.answers.length){
+        stopTimer();
+        setTimeout(()=>endRound(controlTeam),900);
+      } else {
+        setTimeout(()=>startTimer(),600);
+      }
+      break;
+    }
+  }
+  if(!found){ addStrike(); }
+  document.getElementById("guess-input").value="";
+}
+
+function addStrike(){
+  strikes++;updateStrikes();flashWrong();soundWrong();
+  stopTimer();
+  if(strikes===1){ setStatus(`STRIKE! ONE DOWN — ${teams[controlTeam]}, KEEP TRYING!`,"#e74c3c"); setTimeout(()=>startTimer(),800); }
+  if(strikes===2){ setStatus(`TWO STRIKES! ONE MORE AND ${teams[stealTeam]} CAN STEAL!`,"#e74c3c"); setTimeout(()=>startTimer(),800); }
+  if(strikes>=3){
+    setInput(false);
+    setTimeout(()=>triggerSteal(),600);
+  }
+}
+
+function updateStrikes(){
+  for(let i=1;i<=3;i++){
+    document.getElementById(`s${i}`).classList.toggle("show",strikes>=i);
+  }
+}
+
+function triggerSteal(){
+  phase="steal";
+  updateScoreboard();
+  document.getElementById("steal-pts").textContent=`${roundPoints} PTS AT STAKE`;
+  document.getElementById("steal-team-label").textContent=`${teams[stealTeam]} — CAN YOU STEAL?`;
+  document.getElementById("steal-input").value="";
+  document.getElementById("steal-overlay").classList.add("show");
+  setTimeout(()=>document.getElementById("steal-input").focus(),100);
+}
+
+function checkSteal(){
+  const guess=document.getElementById("steal-input").value.trim().toLowerCase();
+  if(!guess) return;
+  const b=BOARDS[currentBoard];
+  let found=false;
+  for(let i=0;i<b.answers.length;i++){
+    if(!revealedAnswers.includes(i)&&fuzzyMatch(guess,b.answers[i][0])){
+      found=true; break;
+    }
+  }
+  document.getElementById("steal-overlay").classList.remove("show");
+  revealAll();
+  if(found){
+    soundSteal(); flashCorrect();
+    setStatus(`${teams[stealTeam]} STEALS ${roundPoints} PTS! INCREDIBLE!`,"#27ae60");
+    setTimeout(()=>endRound(stealTeam),1200);
+  } else {
+    soundWrong(); flashWrong();
+    setStatus(`NO STEAL! ${teams[controlTeam]} KEEPS ${roundPoints} PTS!`,"#f5c518");
+    setTimeout(()=>endRound(controlTeam),1200);
+  }
+}
+
+function failSteal(){
+  document.getElementById("steal-overlay").classList.remove("show");
+  revealAll();
+  setStatus(`${teams[controlTeam]} WINS THE ROUND WITH ${roundPoints} PTS!`,"#f5c518");
+  setTimeout(()=>endRound(controlTeam),1200);
+}
+
+function endRound(winningTeam){
+  stopTimer();
+  scores[winningTeam]+=roundPoints;
+  updateScoreboard();
+  setInput(false);
+  phase="done";
+  soundReveal();
+  setStatus(`${teams[winningTeam]} WINS THE ROUND! +${roundPoints} PTS`,"#f5c518");
+}
+
+function nextRound(){
+  currentBoard++;
+  if(currentBoard>=Math.min(BOARDS.length,10)){ showWinner(); return; }
+
+  loadBoard();
+}
+
+function updateScoreboard(){
+  let h="";
+  teams.forEach((t,i)=>{
+    let cls="team-score";
+    if(phase==="play"&&i===controlTeam) cls+=" control";
+    if(phase==="steal"&&i===stealTeam) cls+=" steal-turn";
+    const lbl=phase==="play"&&i===controlTeam?"IN CONTROL":phase==="steal"&&i===stealTeam?"STEAL!":"";
+    const lblColor=phase==="steal"&&i===stealTeam?"#e74c3c":"#f5c518";
+    h+=`<div class="${cls}">
+      <div class="ts-name" style="color:${TEAM_COLORS[i]}">${t}</div>
+      <div class="ts-pts">${scores[i]}</div>
+      <div class="ts-label" style="color:${lblColor}">${lbl}</div>
+    </div>`;
+  });
+  document.getElementById("scoreboard").innerHTML=h;
+}
+
+function setStatus(msg,color){
+  const el=document.getElementById("status-text");
+  el.textContent=msg;
+  el.style.color=color||"#888";
+}
+
+function setInput(enabled){
+  document.getElementById("guess-input").disabled=!enabled;
+  document.getElementById("btn-check").disabled=!enabled;
+  if(enabled) document.getElementById("guess-input").placeholder="Type answer here...";
+}
+
+function flashWrong(){
+  const f=document.getElementById("wrong-flash");
+  f.style.display="block";
+  setTimeout(()=>f.style.display="none",500);
+}
+
+function flashCorrect(){
+  const f=document.getElementById("correct-flash");
+  f.style.display="block";
+  setTimeout(()=>f.style.display="none",500);
+}
+
+function showWinner(){
+  document.getElementById("game-screen").style.display="none";
+  document.getElementById("winner-screen").style.display="flex";
+  const r=teams.map((t,i)=>({name:t,score:scores[i]})).sort((a,b)=>b.score-a.score);
+  document.getElementById("winner-list").innerHTML=r.map((x,i)=>`
+    <div class="winner-row ${i===0?'first':''}">
+      <span class="wr-rank">${i===0?'🏆':i+1}</span>
+      <span class="wr-name">${x.name}</span>
+      <span class="wr-score">${x.score} PTS</span>
+    </div>`).join("");
+}
+
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter"){
+    if(document.getElementById("steal-overlay").classList.contains("show")){ checkSteal(); return; }
+    if(document.activeElement===document.getElementById("guess-input")) checkAnswer();
+  }
+});
+
+renderInputs();
+</script>
+</body>
+</html>
